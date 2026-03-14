@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Results - AI Technical Debt Framework{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2><i class="fas fa-microscope me-2"></i>Analysis Results</h2>
+                            <p class="mb-0">Job ID: {{ job_id[:8] }}...</p>
+                        </div>
+                        <div>
+                            {% if results %}
+                            <a href="/download-report/{{ job_id }}" class="btn btn-light">
+                                <i class="fas fa-file-pdf me-2"></i>Download PDF Report
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if processing %}
+    <!-- Real-time Processing View -->
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-sync-alt fa-spin me-2"></i>Analysis in Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-4" style="height: 30px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="progressBar" style="width: {{ job_info.progress }}%">
+                            {{ job_info.progress }}%
+                        </div>
+                    </div>
+                    
+                    <p id="statusMessage" class="text-center mb-4">{{ job_info.message }}</p>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card text-center mb-3" id="tier1Card">
+                                <div class="card-body">
+                                    <i class="fas fa-database fa-2x mb-2"></i>
+                                    <h6>Tier 1: Data Collection</h6>
+                                    <span id="tier1Status" class="badge bg-secondary">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center mb-3" id="tier2Card">
+                                <div class="card-body">
+                                    <i class="fas fa-cogs fa-2x mb-2"></i>
+                                    <h6>Tier 2: System Analysis</h6>
+                                    <span id="tier2Status" class="badge bg-secondary">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center mb-3" id="tier3Card">
+                                <div class="card-body">
+                                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                    <h6>Tier 3: AI Smells</h6>
+                                    <span id="tier3Status" class="badge bg-secondary">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center mb-3" id="tier4Card">
+                                <div class="card-body">
+                                    <i class="fas fa-calculator fa-2x mb-2"></i>
+                                    <h6>Tier 4: MES</h6>
+                                    <span id="tier4Status" class="badge bg-secondary">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center mb-3" id="tier5Card">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                    <h6>Tier 5: Maintainability</h6>
+                                    <span id="tier5Status" class="badge bg-secondary">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center mb-3" id="tier6Card">
+                                <div class="card-body">
+                                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                    <h6>Tier 6: Validation</h6>
+                                    <span id="tier6Status" class="badge bg-secondary">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4" id="tierDetails">
+                        <h6>Current Operation:</h6>
+                        <pre id="operationDetails" class="bg-dark text-light p-3 rounded" style="max-height: 200px; overflow-y: auto; font-size: 12px;">
+Waiting for analysis to start...
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            function updateStatus() {
+                $.get('/job-status/{{ job_id }}', function(data) {
+                    $('#progressBar').css('width', data.progress + '%').text(data.progress + '%');
+                    $('#statusMessage').text(data.message);
+                    
+                    // Update tier status
+                    if (data.tier_status) {
+                        for (let tier = 1; tier <= 6; tier++) {
+                            let status = data.tier_status[tier] || 'pending';
+                            let card = $(`#tier${tier}Card`);
+                            let badge = $(`#tier${tier}Status`);
+                            
+                            card.removeClass('border-secondary border-warning border-success');
+                            badge.removeClass('bg-secondary bg-warning bg-success');
+                            
+                            if (status === 'running') {
+                                card.addClass('border-warning');
+                                badge.addClass('bg-warning').text('Running');
+                            } else if (status === 'complete') {
+                                card.addClass('border-success');
+                                badge.addClass('bg-success').text('Complete');
+                            } else {
+                                card.addClass('border-secondary');
+                                badge.addClass('bg-secondary').text('Pending');
+                            }
+                        }
+                    }
+                    
+                    // Show tier results as they come in
+                    if (data.tier_results) {
+                        let details = [];
+                        if (data.tier_results.tier1) {
+                            let t1 = data.tier_results.tier1;
+                            details.push(`📊 TIER 1: Found ${t1.services?.length || 0} services, ${t1.models?.length || 0} models`);
+                        }
+                        if (data.tier_results.tier2) {
+                            let t2 = data.tier_results.tier2;
+                            details.push(`🔍 TIER 2: Detected ${t2.endpoint_count || 0} API endpoints, ${t2.dependency_count || 0} dependencies`);
+                        }
+                        if (data.tier_results.tier3) {
+                            let t3 = data.tier_results.tier3;
+                            details.push(`👃 TIER 3: Direct calls: ${t3.direct_model_calls?.count || 0}, Glue: ${((t3.glue_code_ratio || 0) * 100).toFixed(1)}%`);
+                        }
+                        if (data.tier_results.tier4) {
+                            let t4 = data.tier_results.tier4;
+                            details.push(`📐 TIER 4: MES Score: ${t4.mes_score || 0}/10 (${t4.mes_level || 'Unknown'})`);
+                        }
+                        if (data.tier_results.tier5) {
+                            let t5 = data.tier_results.tier5;
+                            details.push(`🔧 TIER 5: Commits: ${t5.commit_count || 0}, Bug rate: ${((t5.bug_metrics?.bug_rate || 0) * 100).toFixed(1)}%`);
+                        }
+                        if (data.tier_results.tier6) {
+                            let t6 = data.tier_results.tier6;
+                            details.push(`✅ TIER 6: Hypothesis: ${t6.hypothesis_confirmed ? '✓ Confirmed' : '⚠ Not confirmed'}`);
+                        }
+                        
+                        if (details.length > 0) {
+                            $('#operationDetails').text(details.join('\n'));
+                        }
+                    }
+                    
+                    // If complete, reload to show results
+                    if (data.status === 'complete') {
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1000);
+                    } else if (data.status === 'error') {
+                        $('#operationDetails').text('Error: ' + (data.error || 'Unknown error'));
+                        $('#progressBar').removeClass('progress-bar-animated').addClass('bg-danger');
+                    } else {
+                        setTimeout(updateStatus, 2000);
+                    }
+                }).fail(function() {
+                    console.log('Status check failed');
+                });
+            }
+            
+            // Start polling
+            setTimeout(updateStatus, 1000);
+        });
+    </script>
+
+    {% elif results %}
+    <!-- Results View -->
+    
+    <!-- MES Score Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            <h1 class="display-1">{{ results.tier4.mes_score }}</h1>
+                            <h4>/10</h4>
+                        </div>
+                        <div class="col-md-6">
+                            <h2>{{ results.tier4.mes_level }} ENTANGLEMENT</h2>
+                            <p>{{ results.tier4.interpretation }}</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas {% if results.tier4.mes_score <= 3 %}fa-check-circle{% elif results.tier4.mes_score <= 7 %}fa-exclamation-triangle{% else %}fa-times-circle{% endif %} fa-3x"></i>
+                            <p class="mt-2">{{ results.tier1.project_info.project_type }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tier Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="tierTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tier1-tab" data-bs-toggle="tab" data-bs-target="#tier1" type="button" role="tab">
+                        Tier 1: Data Collection
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tier2-tab" data-bs-toggle="tab" data-bs-target="#tier2" type="button" role="tab">
+                        Tier 2: System Analysis
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tier3-tab" data-bs-toggle="tab" data-bs-target="#tier3" type="button" role="tab">
+                        Tier 3: AI Smells
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tier4-tab" data-bs-toggle="tab" data-bs-target="#tier4" type="button" role="tab">
+                        Tier 4: MES
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tier5-tab" data-bs-toggle="tab" data-bs-target="#tier5" type="button" role="tab">
+                        Tier 5: Maintainability
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tier6-tab" data-bs-toggle="tab" data-bs-target="#tier6" type="button" role="tab">
+                        Tier 6: Validation
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="tierTabContent">
+        <!-- TIER 1 -->
+        <div class="tab-pane fade show active" id="tier1" role="tabpanel">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Project Overview</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <tr>
+                                    <th>Project Name:</th>
+                                    <td>{{ results.tier1.project_info.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Language:</th>
+                                    <td>{{ results.tier1.project_info.primary_language or results.tier1.project_info.language or 'Unknown' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Project Type:</th>
+                                    <td>{{ results.tier1.project_info.project_type or 'Unknown' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Files:</th>
+                                    <td>{{ results.tier1.statistics.total_files }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Size:</th>
+                                    <td>{{ results.tier1.statistics.total_size_hr or results.tier1.statistics.total_size_mb ~ ' MB' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Discovered Components</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h3>{{ results.tier1.statistics.services_count or 0 }}</h3>
+                                    <p>Services</p>
+                                </div>
+                                <div class="col-4">
+                                    <h3>{{ results.tier1.statistics.models_count or 0 }}</h3>
+                                    <p>Models</p>
+                                </div>
+                                <div class="col-4">
+                                    <h3>{{ results.tier1.statistics.pipelines_count or 0 }}</h3>
+                                    <p>Pipelines</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Languages Detected</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                {% if results.tier1.languages %}
+                                    {% for lang, count in results.tier1.languages.items() %}
+                                    <tr>
+                                        <td>{{ lang }}</td>
+                                        <td>{{ count }} files</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">No language data available</td>
+                                    </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIER 2 -->
+        <div class="tab-pane fade" id="tier2" role="tabpanel">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Services ({{ results.tier2.services|length }})</h5>
+                        </div>
+                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                            <div class="list-group">
+                                {% for service in results.tier2.services %}
+                                <div class="list-group-item">
+                                    <h6>{{ service.name }}</h6>
+                                    <small>Path: {{ service.path }}</small><br>
+                                    <small>Language: {{ service.language }}</small><br>
+                                    <small>Endpoints: {{ service.endpoint_count or 0 }}</small>
+                                </div>
+                                {% else %}
+                                <p class="text-muted text-center">No services detected</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Dependencies ({{ results.tier2.dependency_count or 0 }})</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                {% if results.tier2.dependencies %}
+                                    {% for service, deps in results.tier2.dependencies.items() %}
+                                    <tr>
+                                        <td><strong>{{ service }}</strong></td>
+                                        <td>{{ deps|length }} dependencies</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">No dependencies detected</td>
+                                    </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Frameworks Detected</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if results.tier2.frameworks %}
+                                <ul>
+                                {% for framework in results.tier2.frameworks %}
+                                    <li>{{ framework }}</li>
+                                {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted">No frameworks detected</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIER 3 -->
+        <div class="tab-pane fade" id="tier3" role="tabpanel">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h5>Direct Model Calls</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <h2>{{ results.tier3.direct_model_calls.count or 0 }}</h2>
+                            <p>services ({{ (results.tier3.direct_model_calls.ratio * 100)|round(1) if results.tier3.direct_model_calls.ratio else 0 }}%)</p>
+                            {% if results.tier3.direct_model_calls.ratio and results.tier3.direct_model_calls.ratio > 0.3 %}
+                            <span class="badge bg-danger">Critical</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h5>Glue Code</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <h2>{{ (results.tier3.glue_code_ratio * 100)|round(1) if results.tier3.glue_code_ratio else 0 }}%</h2>
+                            <p>of code is data transformation</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h5>Hidden Consumers</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <h2>{{ results.tier3.hidden_consumers|length }}</h2>
+                            <p>undocumented consumers</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mt-3">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h5>Complex Pipelines</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <h2>{{ results.tier3.pipeline_complexity.complex_pipelines or 0 }}</h2>
+                            <p>overly complex</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mt-3">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h5>Retrain Frequency</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <h2>{{ results.tier3.retrain_frequency or 0 }}</h2>
+                            <p>events/month</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mt-3">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h5>Feedback Loops</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <h2>{{ results.tier3.feedback_loops|length }}</h2>
+                            <p>detected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIER 4 -->
+        <div class="tab-pane fade" id="tier4" role="tabpanel">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Model Entanglement Score Components</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Component</th>
+                                        <th>Value</th>
+                                        <th>Weight</th>
+                                        <th>Contribution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if results.tier4.components %}
+                                        {% for comp, value in results.tier4.components.items() %}
+                                        {% set weight = results.tier4.weights.get(comp, 0) %}
+                                        <tr>
+                                            <td>{{ comp|replace('_', ' ')|title }}</td>
+                                            <td>{{ (value * 100)|round(1) if value else 0 }}%</td>
+                                            <td>{{ (weight * 100)|round(1) if weight else 0 }}%</td>
+                                            <td>{{ ((value or 0) * (weight or 0) * 10)|round(2) }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">No component data available</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-primary">
+                                        <th colspan="3">TOTAL MES SCORE</th>
+                                        <th><span class="badge bg-primary fs-5">{{ results.tier4.mes_score }}/10</span></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIER 5 -->
+        <div class="tab-pane fade" id="tier5" role="tabpanel">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Code Churn</h5>
+                        </div>
+                        <div class="card-body">
+                            <h3>{{ results.tier5.commit_count or 0 }}</h3>
+                            <p>total commits</p>
+                            <hr>
+                            <h5>Top Changed Files:</h5>
+                            <ul>
+                                {% if results.tier5.top_changed %}
+                                    {% for item in results.tier5.top_changed[:5] %}
+                                        {% if item is iterable and item|length >= 2 %}
+                                            <li>{{ item[0] }} ({{ item[1] }} changes)</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="text-muted">No data available</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Change Impact</h5>
+                        </div>
+                        <div class="card-body">
+                            <h3>{{ results.tier5.impact_metrics.avg_impact|round(1) if results.tier5.impact_metrics else 0 }}</h3>
+                            <p>files affected per change</p>
+                            <hr>
+                            <h5>Impact by Model:</h5>
+                            <ul>
+                                {% if results.tier5.impact_metrics and results.tier5.impact_metrics.impact_by_model %}
+                                    {% set items = [] %}
+                                    {% for model, impact in results.tier5.impact_metrics.impact_by_model.items() %}
+                                        {% set _ = items.append((model, impact)) %}
+                                    {% endfor %}
+                                    {% for item in items|sort(attribute='1', reverse=true) %}
+                                        {% if loop.index <= 5 %}
+                                            <li>{{ item[0] }}: {{ item[1] }} files</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="text-muted">No data available</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Bug Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            <h3>{{ (results.tier5.bug_metrics.bug_rate * 100)|round(1) if results.tier5.bug_metrics and results.tier5.bug_metrics.bug_rate else 0 }}%</h3>
+                            <p>of commits are bug fixes</p>
+                            <hr>
+                            <h5>Bug-Prone Models:</h5>
+                            <ul>
+                                {% if results.tier5.bug_metrics and results.tier5.bug_metrics.bugs_by_model %}
+                                    {% set items = [] %}
+                                    {% for model, bugs in results.tier5.bug_metrics.bugs_by_model.items() %}
+                                        {% set _ = items.append((model, bugs)) %}
+                                    {% endfor %}
+                                    {% for item in items|sort(attribute='1', reverse=true) %}
+                                        {% if loop.index <= 5 %}
+                                            <li>{{ item[0] }}: {{ item[1] }} bugs</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="text-muted">No data available</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIER 6 -->
+        <div class="tab-pane fade" id="tier6" role="tabpanel">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header {% if results.tier6.hypothesis_confirmed %}bg-success{% else %}bg-warning{% endif %} text-white">
+                            <h5>Hypothesis Validation</h5>
+                        </div>
+                        <div class="card-body">
+                            <h4>Degradation Ratio: {{ results.tier6.degradation_ratio|round(2) if results.tier6.degradation_ratio else 0 }}</h4>
+                            <p>{{ results.tier6.interpretation }}</p>
+                            
+                            <table class="table">
+                                <tr>
+                                    <th>Isolated Systems MES:</th>
+                                    <td>{{ results.tier6.avg_isolated_mes|round(1) if results.tier6.avg_isolated_mes else 0 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Non-Isolated Systems MES:</th>
+                                    <td>{{ results.tier6.avg_non_isolated_mes|round(1) if results.tier6.avg_non_isolated_mes else 0 }}</td>
+                                </tr>
+                            </table>
+                            
+                            <span class="badge {% if results.tier6.hypothesis_confirmed %}bg-success{% else %}bg-warning{% endif %} fs-6">
+                                {% if results.tier6.hypothesis_confirmed %}✓ Hypothesis Confirmed{% else %}⚠ Hypothesis Not Confirmed{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Correlations</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <tr>
+                                    <th>MES vs Code Churn:</th>
+                                    <td>{{ results.tier6.correlations.mes_churn|round(2) if results.tier6.correlations and results.tier6.correlations.mes_churn else 0 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>MES vs Bug Rate:</th>
+                                    <td>{{ results.tier6.correlations.mes_bug|round(2) if results.tier6.correlations and results.tier6.correlations.mes_bug else 0 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>MES vs Change Impact:</th>
+                                    <td>{{ results.tier6.correlations.mes_impact|round(2) if results.tier6.correlations and results.tier6.correlations.mes_impact else 0 }}</td>
+                                </tr>
+                            </table>
+                            <p>{{ results.tier6.correlation_interpretation or 'No correlation data available' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5>Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    {% if results.recommendations %}
+                        {% for rec in results.recommendations %}
+                        <div class="alert alert-{% if rec.priority == 'CRITICAL' %}danger{% elif rec.priority == 'HIGH' %}warning{% elif rec.priority == 'MEDIUM' %}info{% else %}secondary{% endif %}">
+                            <h6>[{{ rec.priority }}] {{ rec.title }}</h6>
+                            <p>{{ rec.description }}</p>
+                            <small>Effort: {{ rec.effort }} | Impact: {{ rec.impact }}</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No recommendations available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="row">
+        <div class="col-12 text-center">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
+                    <h3>Job Not Found</h3>
+                    <p>{{ error|default('The requested analysis job could not be found.') }}</p>
+                    <a href="/" class="btn btn-primary">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

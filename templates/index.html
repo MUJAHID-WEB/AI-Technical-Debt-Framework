@@ -1,0 +1,809 @@
+{% extends "base.html" %}
+
+{% block title %}Home - AI Technical Debt Framework{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-area {
+        border: 3px dashed #dee2e6;
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .upload-area:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(13, 110, 253, 0.05);
+        transform: translateY(-2px);
+    }
+    
+    .upload-area i {
+        font-size: 4rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .feature-card {
+        padding: 2rem;
+        text-align: center;
+        height: 100%;
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        background: linear-gradient(135deg, var(--primary-color), #0b5ed7);
+        color: white;
+        border-radius: 50%;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem;
+    }
+    
+    .method-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .method-card.selected {
+        border: 3px solid var(--primary-color);
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .recent-item {
+        transition: all 0.3s ease;
+    }
+    
+    .recent-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+    
+    .tier-badge {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        font-weight: 600;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+
+    <!-- Main Upload Section -->
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Your Project</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Method Selection Tabs -->
+                    <ul class="nav nav-pills mb-4 justify-content-center" id="uploadMethodTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="local-tab" data-bs-toggle="pill" data-bs-target="#local" type="button">
+                                <i class="fas fa-upload me-2"></i>Local Upload
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="github-tab" data-bs-toggle="pill" data-bs-target="#github" type="button">
+                                <i class="fab fa-github me-2"></i>GitHub
+                            </button>
+                        </li>
+                        {# <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="mlops-tab" data-bs-toggle="pill" data-bs-target="#mlops" type="button">
+                                <i class="fas fa-cloud me-2"></i>MLOps Platforms
+                            </button>
+                        </li> #}
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Local Upload -->
+                        <div class="tab-pane fade show active" id="local" role="tabpanel">
+                            <form id="localUploadForm" enctype="multipart/form-data">
+                                <input type="hidden" name="source_type" value="local">
+                                
+                                <div class="upload-area" id="dropZone">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <h5>Drag & Drop or Click to Upload</h5>
+                                    <p class="text-muted mb-2">Supported formats: ZIP, TAR.GZ (max 500MB)</p>
+                                    <input type="file" name="project_files" id="fileInput" accept=".zip,.tar,.gz,.tgz" multiple style="display: none;">
+                                    <button type="button" class="btn btn-primary" id="browseBtn">
+                                        <i class="fas fa-folder-open me-2"></i>Browse Files
+                                    </button>
+                                </div>
+                                
+                                <div id="fileList" class="mt-3" style="display: none;">
+                                    <h6>Selected Files:</h6>
+                                    <ul class="list-group" id="selectedFilesList"></ul>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary w-100 py-3" id="submitLocalBtn" disabled>
+                                        <i class="fas fa-upload me-2"></i>Upload & Analyze
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- GitHub -->
+                        <div class="tab-pane fade" id="github" role="tabpanel">
+                            <form id="githubForm">
+                                <input type="hidden" name="source_type" value="github">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Repository URL</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-github"></i></span>
+                                        <input type="url" class="form-control" id="githubUrl" name="github_url" 
+                                               placeholder="https://github.com/username/repository" required>
+                                    </div>
+                                    <div class="form-text">Enter the full GitHub repository URL</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Branch (optional)</label>
+                                    <input type="text" class="form-control" id="githubBranch" name="branch" 
+                                           placeholder="main" value="main">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-outline-secondary w-100" id="searchGithubBtn">
+                                        <i class="fas fa-search me-2"></i>Search Repositories
+                                    </button>
+                                </div>
+                                
+                                <div id="githubSearchResults" class="mb-3" style="display: none; max-height: 300px; overflow-y: auto;">
+                                    <!-- Results will be populated here -->
+                                </div>
+                                
+                                <button type="submit" class="btn btn-dark w-100 py-3" id="submitGithubBtn">
+                                    <i class="fab fa-github me-2"></i>Clone & Analyze
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- MLOps -->
+                        <div class="tab-pane fade" id="mlops" role="tabpanel">
+                            <form id="mlopsForm">
+                                <input type="hidden" name="source_type" value="mlops">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Platform</label>
+                                    <select class="form-select" id="mlopsPlatform" name="mlops_platform" required>
+                                        <option value="">Select platform...</option>
+                                        <option value="kubeflow">Kubeflow</option>
+                                        <option value="mlflow">MLflow</option>
+                                        <option value="bentoml">BentoML</option>
+                                        <option value="seldon">Seldon Core</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">API Endpoint</label>
+                                    <input type="url" class="form-control" id="mlopsEndpoint" name="endpoint" 
+                                           placeholder="http://localhost:8080" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Authentication (optional)</label>
+                                    <input type="text" class="form-control" id="mlopsToken" name="token" 
+                                           placeholder="API Token">
+                                </div>
+                                
+                                <button type="submit" class="btn btn-info text-white w-100 py-3" id="submitMlopsBtn">
+                                    <i class="fas fa-cloud-download-alt me-2"></i>Collect & Analyze
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+ 
+    <!-- Recent Analyses -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Analyses</h5>
+                    <button class="btn btn-sm btn-light" onclick="refreshRecentAnalyses()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="recentAnalysesList" class="list-group">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-hourglass-half fa-3x mb-3"></i>
+                            <p>Loading recent analyses...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cog fa-spin me-2"></i>
+                    Analysis in Progress
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="progressBar" role="progressbar" style="width: 0%">
+                            <span id="progressPercent">0%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status Message -->
+                <div class="alert alert-info" id="statusMessage">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span>Initializing analysis...</span>
+                </div>
+                
+                <!-- Tier Progress -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h6>Tier Progress:</h6>
+                        <div class="list-group" id="tierProgress">
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="tier1">
+                                <span><i class="fas fa-database me-2"></i>Tier 1: Data Collection</span>
+                                <span class="badge bg-secondary" id="tier1Status">Pending</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="tier2">
+                                <span><i class="fas fa-cogs me-2"></i>Tier 2: System Analysis</span>
+                                <span class="badge bg-secondary" id="tier2Status">Pending</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="tier3">
+                                <span><i class="fas fa-exclamation-triangle me-2"></i>Tier 3: AI Smells</span>
+                                <span class="badge bg-secondary" id="tier3Status">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>&nbsp;</h6>
+                        <div class="list-group">
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="tier4">
+                                <span><i class="fas fa-calculator me-2"></i>Tier 4: MES</span>
+                                <span class="badge bg-secondary" id="tier4Status">Pending</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="tier5">
+                                <span><i class="fas fa-chart-line me-2"></i>Tier 5: Maintainability</span>
+                                <span class="badge bg-secondary" id="tier5Status">Pending</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="tier6">
+                                <span><i class="fas fa-check-circle me-2"></i>Tier 6: Validation</span>
+                                <span class="badge bg-secondary" id="tier6Status">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Live Output -->
+                <div class="mt-4">
+                    <h6><i class="fas fa-terminal me-2"></i>Live Output:</h6>
+                    <pre id="liveOutput" class="bg-dark text-light p-3 rounded" style="height: 200px; overflow-y: auto; font-size: 12px;"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="viewResultsBtn" style="display: none;" onclick="viewResults()">
+                    <i class="fas fa-chart-line me-2"></i>View Results
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GitHub Search Results Modal -->
+<div class="modal fade" id="githubSearchModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fab fa-github me-2"></i>
+                    GitHub Repository Search
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="githubSearchQuery" 
+                           placeholder="Enter search query (e.g., 'microservices machine learning')" 
+                           value="microservices machine learning">
+                </div>
+                <div id="githubSearchResultsList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentJobId = null;
+let progressInterval = null;
+
+$(document).ready(function() {
+    // Load recent analyses
+    loadRecentAnalyses();
+    
+    // Local Upload - Drag & Drop
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--primary-color)';
+        dropZone.style.backgroundColor = 'rgba(13, 110, 253, 0.05)';
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '#dee2e6';
+        dropZone.style.backgroundColor = '#f8f9fa';
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#dee2e6';
+        dropZone.style.backgroundColor = '#f8f9fa';
+        
+        const files = e.dataTransfer.files;
+        fileInput.files = files;
+        updateFileList(files);
+    });
+    
+    $('#browseBtn').click(() => fileInput.click());
+    
+    fileInput.addEventListener('change', function() {
+        updateFileList(this.files);
+    });
+    
+    function updateFileList(files) {
+        if (files.length > 0) {
+            $('#fileList').show();
+            $('#selectedFilesList').empty();
+            
+            let totalSize = 0;
+            
+            for (let file of files) {
+                totalSize += file.size;
+                $('#selectedFilesList').append(`
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-file-archive me-2"></i>${file.name}</span>
+                        <span class="badge bg-primary">${formatBytes(file.size)}</span>
+                    </li>
+                `);
+            }
+            
+            if (totalSize <= 500 * 1024 * 1024) {
+                $('#submitLocalBtn').prop('disabled', false);
+                $('#fileList').append(`
+                    <div class="alert alert-success mt-2">
+                        <i class="fas fa-check-circle me-2"></i>Total size: ${formatBytes(totalSize)} (within 500MB limit)
+                    </div>
+                `);
+            } else {
+                $('#submitLocalBtn').prop('disabled', true);
+                $('#fileList').append(`
+                    <div class="alert alert-danger mt-2">
+                        <i class="fas fa-exclamation-circle me-2"></i>Total size exceeds 500MB limit
+                    </div>
+                `);
+            }
+        } else {
+            $('#fileList').hide();
+            $('#submitLocalBtn').prop('disabled', true);
+        }
+    }
+    
+    // Local Upload Form Submit
+    $('#localUploadForm').submit(function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        $.ajax({
+            url: '/upload',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.job_id) {
+                    currentJobId = response.job_id;
+                    showProgressModal(currentJobId);
+                } else {
+                    showToast('Upload failed: ' + (response.error || 'Unknown error'), 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                showToast('Upload failed: ' + error, 'error');
+            }
+        });
+    });
+    
+    // GitHub Form Submit
+    $('#githubForm').submit(function(e) {
+        e.preventDefault();
+        
+        const formData = $(this).serialize();
+        
+        $.ajax({
+            url: '/upload',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.job_id) {
+                    currentJobId = response.job_id;
+                    showProgressModal(currentJobId);
+                } else {
+                    showToast('GitHub clone failed: ' + (response.error || 'Unknown error'), 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                showToast('GitHub clone failed: ' + error, 'error');
+            }
+        });
+    });
+    
+    // MLOps Form Submit
+    $('#mlopsForm').submit(function(e) {
+        e.preventDefault();
+        
+        const formData = $(this).serialize();
+        
+        $.ajax({
+            url: '/upload',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.job_id) {
+                    currentJobId = response.job_id;
+                    showProgressModal(currentJobId);
+                } else {
+                    showToast('MLOps collection failed: ' + (response.error || 'Unknown error'), 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                showToast('MLOps collection failed: ' + error, 'error');
+            }
+        });
+    });
+    
+    // Search GitHub
+    $('#searchGithubBtn').click(function() {
+        $('#githubSearchModal').modal('show');
+        searchGitHub();
+    });
+    
+    $('#githubSearchQuery').on('input', _.debounce(searchGitHub, 500));
+});
+
+function searchGitHub() {
+    const query = $('#githubSearchQuery').val();
+    
+    if (!query) return;
+    
+    $('#githubSearchResultsList').html(`
+        <div class="text-center p-4">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2">Searching GitHub...</p>
+        </div>
+    `);
+    
+    $.ajax({
+        url: '/api/collectors/github/search',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ query: query }),
+        success: function(results) {
+            displayGitHubResults(results);
+        },
+        error: function(xhr, status, error) {
+            $('#githubSearchResultsList').html(`
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>Search failed: ${error}
+                </div>
+            `);
+        }
+    });
+}
+
+function displayGitHubResults(results) {
+    if (!results || results.length === 0) {
+        $('#githubSearchResultsList').html(`
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>No repositories found
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '<div class="list-group">';
+    
+    results.slice(0, 10).forEach(repo => {
+        html += `
+            <a href="#" class="list-group-item list-group-item-action" 
+               onclick="selectGitHubRepo('${repo.clone_url || repo.url}', '${repo.name}')">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">${repo.name || repo.full_name}</h6>
+                    <small class="text-muted">
+                        <i class="fas fa-star text-warning"></i> ${repo.stars || repo.stargazers_count || 0}
+                    </small>
+                </div>
+                <p class="mb-1 small text-muted">${repo.description || 'No description'}</p>
+                <small>
+                    <i class="fas fa-code me-2"></i>${repo.language || 'Unknown'}
+                </small>
+            </a>
+        `;
+    });
+    
+    html += '</div>';
+    
+    $('#githubSearchResultsList').html(html);
+}
+
+function selectGitHubRepo(url, name) {
+    $('#githubUrl').val(url);
+    $('#githubSearchModal').modal('hide');
+    showToast(`Selected: ${name}`, 'success');
+}
+
+function showProgressModal(jobId) {
+    const modal = new bootstrap.Modal(document.getElementById('progressModal'));
+    modal.show();
+    
+    // Reset UI
+    $('#progressBar').css('width', '0%').text('0%');
+    $('#progressPercent').text('0%');
+    $('#statusMessage').html('<i class="fas fa-info-circle me-2"></i>Starting analysis...');
+    $('#liveOutput').empty();
+    $('#viewResultsBtn').hide();
+    
+    // Reset tier status
+    for (let i = 1; i <= 6; i++) {
+        $(`#tier${i} .badge`).removeClass('bg-warning bg-success bg-danger')
+                             .addClass('bg-secondary')
+                             .text('Pending');
+        $(`#tier${i}`).removeClass('list-group-item-warning list-group-item-success');
+    }
+    
+    // Start polling
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+    
+    progressInterval = setInterval(() => pollJobStatus(jobId), 2000);
+}
+
+function pollJobStatus(jobId) {
+    $.ajax({
+        url: `/job-status/${jobId}`,
+        type: 'GET',
+        success: function(data) {
+            updateProgressUI(data);
+            
+            if (data.status === 'complete') {
+                clearInterval(progressInterval);
+                progressInterval = null;
+                
+                $('#statusMessage').html(`
+                    <i class="fas fa-check-circle me-2 text-success"></i>
+                    Analysis complete! Redirecting to results...
+                `);
+                
+                $('#viewResultsBtn').show();
+                
+                setTimeout(() => {
+                    $('#progressModal').modal('hide');
+                    window.location.href = `/results/${jobId}`;
+                }, 2000);
+                
+                // Save to recent analyses
+                saveRecentAnalysis(jobId, data);
+                
+            } else if (data.status === 'error') {
+                clearInterval(progressInterval);
+                progressInterval = null;
+                
+                $('#statusMessage').html(`
+                    <i class="fas fa-exclamation-circle me-2 text-danger"></i>
+                    Error: ${data.error || data.message || 'Unknown error'}
+                `);
+                
+                $('#progressBar').removeClass('progress-bar-animated').addClass('bg-danger');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Polling error:', error);
+        }
+    });
+}
+
+function updateProgressUI(data) {
+    // Update progress bar
+    const progress = data.progress || 0;
+    $('#progressBar').css('width', progress + '%');
+    $('#progressPercent').text(progress + '%');
+    
+    // Update status message
+    $('#statusMessage').html(`
+        <i class="fas fa-info-circle me-2"></i>
+        ${data.message || 'Processing...'}
+    `);
+    
+    // Update tier status
+    if (data.tier_status) {
+        for (let tier = 1; tier <= 6; tier++) {
+            const status = data.tier_status[tier] || 'pending';
+            const badge = $(`#tier${tier} .badge`);
+            const item = $(`#tier${tier}`);
+            
+            badge.removeClass('bg-secondary bg-warning bg-success');
+            item.removeClass('list-group-item-warning list-group-item-success');
+            
+            if (status === 'running') {
+                badge.addClass('bg-warning').text('Running');
+                item.addClass('list-group-item-warning');
+            } else if (status === 'complete') {
+                badge.addClass('bg-success').text('Complete');
+                item.addClass('list-group-item-success');
+            } else {
+                badge.addClass('bg-secondary').text('Pending');
+            }
+        }
+    }
+    
+    // Update live output
+    if (data.tier_results) {
+        let output = '';
+        
+        if (data.tier_results.tier1) {
+            output += `[TIER 1] Found ${data.tier_results.tier1.services?.length || 0} services, ${data.tier_results.tier1.models?.length || 0} models\n`;
+        }
+        if (data.tier_results.tier2) {
+            output += `[TIER 2] Detected ${data.tier_results.tier2.endpoint_count || 0} API endpoints\n`;
+        }
+        if (data.tier_results.tier3) {
+            const smells = data.tier_results.tier3;
+            output += `[TIER 3] Direct calls: ${smells.direct_model_calls?.count || 0}, Glue: ${(smells.glue_code_ratio*100 || 0).toFixed(1)}%\n`;
+        }
+        if (data.tier_results.tier4) {
+            output += `[TIER 4] MES Score: ${data.tier_results.tier4.mes_score || 0}/10\n`;
+        }
+        
+        if (output) {
+            $('#liveOutput').text(output);
+        }
+    }
+}
+
+function loadRecentAnalyses() {
+    const analyses = JSON.parse(localStorage.getItem('recentAnalyses') || '[]');
+    const list = $('#recentAnalysesList');
+    
+    if (analyses.length === 0) {
+        list.html(`
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <p>No recent analyses</p>
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '';
+    analyses.slice(0, 5).forEach(analysis => {
+        const date = analysis.timestamp ? new Date(analysis.timestamp).toLocaleString() : 'Unknown';
+        const scoreClass = getScoreColor(analysis.mes || 0);
+        
+        html += `
+            <a href="/results/${analysis.job_id}" class="list-group-item list-group-item-action recent-item">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">
+                        <i class="fas fa-robot me-2 text-primary"></i>
+                        ${analysis.name || 'Analysis'}
+                    </h6>
+                    <small class="text-muted">${date}</small>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div>
+                        <span class="badge bg-${scoreClass}">MES: ${analysis.mes || 'N/A'}</span>
+                        <span class="badge bg-secondary">${analysis.status || 'Complete'}</span>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-file-code me-1"></i>${analysis.file_count || 0} files
+                    </small>
+                </div>
+            </a>
+        `;
+    });
+    
+    list.html(html);
+}
+
+function saveRecentAnalysis(jobId, data) {
+    const analyses = JSON.parse(localStorage.getItem('recentAnalyses') || '[]');
+    
+    analyses.unshift({
+        job_id: jobId,
+        name: `Analysis ${new Date().toLocaleString()}`,
+        timestamp: new Date().toISOString(),
+        mes: data.mes || data.mes_score || 0,
+        status: 'Complete',
+        file_count: data.tier_results?.tier1?.statistics?.total_files || 0
+    });
+    
+    // Keep only last 10
+    if (analyses.length > 10) {
+        analyses.pop();
+    }
+    
+    localStorage.setItem('recentAnalyses', JSON.stringify(analyses));
+    loadRecentAnalyses();
+}
+
+function refreshRecentAnalyses() {
+    loadRecentAnalyses();
+    showToast('Recent analyses refreshed', 'success');
+}
+
+function viewResults() {
+    if (currentJobId) {
+        window.location.href = `/results/${currentJobId}`;
+    }
+}
+
+// Debounce function for search
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+window._ = { debounce: debounce };
+</script>
+{% endblock %}

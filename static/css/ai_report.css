@@ -1,0 +1,117 @@
+/* AI Report Specialized Styles */
+.ai-report-container {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-top: 1rem;
+}
+
+.ai-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    transition: var(--transition);
+}
+
+.ai-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.ai-card-title {
+    color: var(--text-bright);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ai-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+.priority-critical { background: rgba(248, 81, 73, 0.2); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
+.priority-high { background: rgba(210, 153, 34, 0.2); color: #ffa657; border: 1px solid rgba(210, 153, 34, 0.4); }
+.priority-medium { background: rgba(88, 166, 255, 0.2); color: #79c0ff; border: 1px solid rgba(88, 166, 255, 0.4); }
+.priority-low { background: rgba(63, 185, 80, 0.2); color: #7ee787; border: 1px solid rgba(63, 185, 80, 0.4); }
+
+.ai-field {
+    margin-bottom: 0.4rem;
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.ai-field-label {
+    font-weight: 700;
+    color: var(--text-bright);
+    min-width: 110px;
+    opacity: 0.8;
+}
+
+.ai-list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border-glass);
+    padding-top: 1rem;
+}
+
+.ai-list-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+}
+
+.ai-list li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.ai-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    opacity: 0.7;
+}
+
+.ai-summary-card {
+    background: linear-gradient(145deg, rgba(188, 140, 255, 0.1), rgba(88, 166, 255, 0.05));
+    border: 1px solid rgba(188, 140, 255, 0.3);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.ai-phase {
+    border-left: 2px solid var(--accent);
+    padding-left: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.ai-phase-title {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.94rem;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.ai-phase-content {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}

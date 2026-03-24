@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AI Technical Debt Management Framework{% endblock %}</title>
+    <title>{% block title %}AI Technical Debt Framework{% endblock %}</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,206 +14,41 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- jQuery (required for Bootstrap) -->
+    <!-- jQuery & Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
-    <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Plotly for charts -->
+    <!-- Plotly -->
     <script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     
-    <style>
-        :root {
-            --primary-color: #0d6efd;
-            --success-color: #198754;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --dark-color: #212529;
-            --light-color: #f8f9fa;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f7fb;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            font-size: 1.5rem;
-        }
-        
-        .navbar-brand i {
-            color: #ffd700;
-        }
-        
-        .footer {
-            margin-top: auto;
-            background-color: white;
-            border-top: 1px solid #e9ecef;
-            padding: 2rem 0;
-        }
-        
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .card-header {
-            background-color: white;
-            border-bottom: 2px solid var(--primary-color);
-            border-radius: 15px 15px 0 0 !important;
-            padding: 1.2rem 1.5rem;
-            font-weight: 600;
-        }
-        
-        .btn {
-            border-radius: 10px;
-            padding: 0.6rem 1.5rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #0d6efd, #0b5ed7);
-            border: none;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #0b5ed7, #0a58ca);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(13,110,253,0.3);
-        }
-        
-        .progress {
-            height: 10px;
-            border-radius: 10px;
-            background-color: #e9ecef;
-        }
-        
-        .progress-bar {
-            background: linear-gradient(90deg, var(--primary-color), #0b5ed7);
-            border-radius: 10px;
-        }
-        
-        .badge {
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-        
-        .alert {
-            border-radius: 12px;
-            border: none;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-        }
-        
-        .table {
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .table thead th {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 600;
-            border: none;
-        }
-        
-        .nav-tabs .nav-link {
-            color: var(--dark-color);
-            font-weight: 500;
-            border: none;
-            padding: 1rem 1.5rem;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-tabs .nav-link:hover {
-            color: var(--primary-color);
-            background-color: rgba(13,110,253,0.05);
-        }
-        
-        .nav-tabs .nav-link.active {
-            color: var(--primary-color);
-            border-bottom: 3px solid var(--primary-color);
-            background-color: transparent;
-        }
-        
-        .modal-content {
-            border-radius: 20px;
-            border: none;
-        }
-        
-        .modal-header {
-            background: linear-gradient(135deg, var(--primary-color), #0b5ed7);
-            color: white;
-            border-radius: 20px 20px 0 0;
-            border: none;
-        }
-        
-        .modal-header .btn-close {
-            filter: brightness(0) invert(1);
-        }
-        
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-        }
-        
-        @media (max-width: 768px) {
-            .navbar-brand {
-                font-size: 1.2rem;
-            }
-            
-            .btn {
-                padding: 0.5rem 1rem;
-            }
-        }
-    </style>
-    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, var(--primary-color), #0b5ed7);">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-premium sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-robot me-2"></i>
-                AI Technical Debt Framework
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <div class="me-2 d-flex align-items-center justify-content-center bg-surface-light border border-main" style="width: 32px; height: 32px; border-radius: 6px;">
+                    <i class="fas fa-brain text-primary small"></i>
+                </div>
+                <span class="fw-bold tracking-tight">AI Technical Debt <span class="text-primary">Framework</span></span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fas fa-bars small"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
-                            <i class="fas fa-home me-1"></i> Home
-                        </a>
+                <ul class="navbar-nav ms-auto small fw-bold">
+                    <li class="nav-item mx-lg-2">
+                        <a class="nav-link {% if request.path == '/' %}active text-primary{% endif %}" href="/">DASHBOARD</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#aboutModal">
-                            <i class="fas fa-info-circle me-1"></i> About
-                        </a>
+                    <li class="nav-item mx-lg-2">
+                        <a class="nav-link text-muted" href="#" data-bs-toggle="modal" data-bs-target="#aboutModal">ABOUT</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#docsModal">
-                            <i class="fas fa-book me-1"></i> Docs
-                        </a>
+                    <li class="nav-item mx-lg-2">
+                        <a class="nav-link text-muted" href="#" data-bs-toggle="modal" data-bs-target="#docsModal">DOCS</a>
                     </li>
                 </ul>
             </div>
@@ -221,95 +56,60 @@
     </nav>
 
     <!-- Main Content -->
-    <main style="flex: 1;">
+    <main style="min-height: 80vh;">
         {% block content %}{% endblock %}
     </main>
 
-
+    <!-- Footer -->
+    <footer class="py-5 bg-surface border-top border-main mt-5">
+        <div class="container text-center">
+            <div class="mb-4">
+                <h6 class="text-bright fw-bold mb-1">AI Technical Debt Measurement Framework</h6>
+                <p class="text-muted small">Quantifying non-deterministic maintainability degradation in ML systems.</p>
+            </div>
+            <div class="d-flex justify-content-center gap-4 mb-4">
+                <a href="#" class="text-muted small hover-bright"><i class="fab fa-github me-1"></i> Source</a>
+                <a href="#" class="text-muted small hover-bright"><i class="fas fa-file-lines me-1"></i> Paper</a>
+                <a href="#" class="text-muted small hover-bright"><i class="fas fa-envelope me-1"></i> Feedback</a>
+            </div>
+            <div class="text-muted small opacity-50">&copy; 2026 • Research Release v2.0</div>
+        </div>
+    </footer>
 
     <!-- About Modal -->
     <div class="modal fade" id="aboutModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-info-circle me-2"></i>
+            <div class="modal-content bg-surface border border-main shadow-lg">
+                <div class="modal-header border-bottom border-main py-4">
+                    <h5 class="modal-title fw-bold text-bright">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>
                         About the Framework
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <h6>The Core Problem</h6>
-                    <p>When we add AI components to our systems, they introduce a new, sticky kind of technical debt. Unlike traditional code debt, AI debt includes:</p>
-                    <ul>
-                        <li>Hidden feedback loops where models influence their own training data</li>
-                        <li>Explosive glue code connecting components</li>
-                        <li>Undeclared consumers silently depending on models</li>
-                        <li>Data dependencies that can break systems without any code changes</li>
-                    </ul>
+                <div class="modal-body p-4 text-main">
+                    <h6 class="text-bright fw-bold mb-3">The Core Problem</h6>
+                    <p>AI components introduce a new, "sticky" kind of technical debt. Unlike traditional code debt, AI debt includes hidden feedback loops, explosive glue code, and undeclared consumer dependencies.</p>
                     
-                    <h6 class="mt-4">Research Focus</h6>
-                    <p>Our research focuses on three key questions:</p>
-                    <ol>
-                        <li>How does including "black box" AI models degrade maintainability over time?</li>
-                        <li>Can we define new metrics - specifically a "Model Entanglement Score" - to quantify coupling?</li>
-                        <li>Do AI-enabled systems degrade 3 times faster than traditional systems?</li>
-                    </ol>
+                    <h6 class="text-bright fw-bold mt-4 mb-3">Model Entanglement Score (MES)</h6>
+                    <p>Our research defines the "Model Entanglement Score" to quantify how deeply AI models are coupled with your infrastructure, impacting overall system maintainability.</p>
                     
-                    <h6 class="mt-4">The 6-Tier Framework</h6>
-                    <div class="row mt-3">
-                        <div class="col-md-4 mb-2"><span class="badge bg-primary">TIER 1</span> Data Collection</div>
-                        <div class="col-md-4 mb-2"><span class="badge bg-primary">TIER 2</span> Analysis Engine</div>
-                        <div class="col-md-4 mb-2"><span class="badge bg-primary">TIER 3</span> AI Smell Detection</div>
-                        <div class="col-md-4 mb-2"><span class="badge bg-primary">TIER 4</span> Metrics Computation (MES)</div>
-                        <div class="col-md-4 mb-2"><span class="badge bg-primary">TIER 5</span> Maintainability Analysis</div>
-                        <div class="col-md-4 mb-2"><span class="badge bg-primary">TIER 6</span> Validation & Results</div>
+                    <div class="row mt-4 g-2">
+                        {% for i in range(1, 7) %}
+                        <div class="col-6">
+                            <div class="p-2 rounded bg-deep border border-main text-muted small">
+                                <span class="text-primary fw-bold me-2">T{{ i }}</span> Tier {{ i }} Analysis
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Documentation Modal -->
+    <!-- Docs Modal -->
     <div class="modal fade" id="docsModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-book me-2"></i>
-                        Documentation
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <h6>How to Use</h6>
-                    
-                    <h6 class="mt-3">1. Upload Your Project</h6>
-                    <p>Choose from three collection methods:</p>
-                    <ul>
-                        <li><strong>Local Upload:</strong> Upload a ZIP file of your project</li>
-                        <li><strong>GitHub Collector:</strong> Clone a repository directly from GitHub</li>
-                        <li><strong>MLOps Platforms:</strong> Connect to Kubeflow, MLflow, BentoML, or Seldon Core</li>
-                    </ul>
-                    
-                    <h6 class="mt-3">2. Analysis Process</h6>
-                    <p>The framework will automatically run all 6 tiers:</p>
-                    <ul>
-                        <li><strong>Tier 1:</strong> Scans files, detects languages, identifies services</li>
-                        <li><strong>Tier 2:</strong> Analyzes architecture, finds dependencies</li>
-                        <li><strong>Tier 3:</strong> Detects AI smells (direct calls, glue code, hidden consumers)</li>
-                        <li><strong>Tier 4:</strong> Calculates Model Entanglement Score (0-10)</li>
-                        <li><strong>Tier 5:</strong> Analyzes maintainability (churn, bugs, impact)</li>
-                        <li><strong>Tier 6:</strong> Validates research hypotheses</li>
-                    </ul>
-                    
-                    <h6 class="mt-3">3. Results</h6>
-                    <p>View detailed results per tier and download a comprehensive PDF report.</p>
-                    
-                    <h6 class="mt-3">Supported Project Types</h6>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <span class="badge bg-secondary">Microservices</span>
                             <span class="badge bg-secondary">Web Apps</span>
                             <span class="badge bg-secondary">React</span>
                         </div>

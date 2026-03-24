@@ -133,6 +133,10 @@ class UniversalDataCollector:
         # Update statistics
         self._update_statistics()
         
+        # Convert non-serializable types to standard Python types
+        self.data['frameworks'] = list(self.data['frameworks'])
+        self.data['languages'] = dict(self.data['languages'])
+        
         return self.data
     
     def _walk_directory(self):
@@ -476,10 +480,18 @@ class UniversalDataCollector:
             ext = file['extension'] or 'no_extension'
             extensions[ext] += 1
         
+        def format_bytes(size):
+            for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+                if size < 1024:
+                    return f"{size:.2f} {unit}"
+                size /= 1024
+            return f"{size:.2f} PB"
+
         self.data['statistics'] = {
             'total_files': total_files,
             'total_size': total_size,
             'total_size_mb': round(total_size / (1024 * 1024), 2),
+            'total_size_hr': format_bytes(total_size),
             'file_types': dict(extensions),
             'services_count': len(self.data['services']),
             'models_count': len(self.data['models']),

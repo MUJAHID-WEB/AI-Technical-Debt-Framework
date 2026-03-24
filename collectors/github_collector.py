@@ -102,40 +102,39 @@ class GitHubCollector:
         return results
     
     def _extract_repo_info(self, repo):
-        """Extract relevant information from repository object"""
-        return {
-            'id': repo.id,
-            'name': repo.full_name,
-            'full_name': repo.full_name,
-            'description': repo.description,
-            'url': repo.html_url,
-            'clone_url': repo.clone_url,
-            'ssh_url': repo.ssh_url,
-            'homepage': repo.homepage,
-            'stars': repo.stargazers_count,
-            'forks': repo.forks_count,
-            'watchers': repo.watchers_count,
-            'language': repo.language,
-            'topics': repo.get_topics(),
-            'created_at': repo.created_at.isoformat() if repo.created_at else None,
-            'updated_at': repo.updated_at.isoformat() if repo.updated_at else None,
-            'pushed_at': repo.pushed_at.isoformat() if repo.pushed_at else None,
-            'size': repo.size,
-            'open_issues': repo.open_issues_count,
-            'has_issues': repo.has_issues,
-            'has_wiki': repo.has_wiki,
-            'has_pages': repo.has_pages,
-            'has_downloads': repo.has_downloads,
-            'archived': repo.archived,
-            'disabled': repo.disabled,
-            'license': repo.license.name if repo.license else None,
-            'default_branch': repo.default_branch,
-            'owner': {
-                'login': repo.owner.login,
-                'type': repo.owner.type,
-                'avatar_url': repo.owner.avatar_url
+        """Extract relevant information from repository object with safety guards"""
+        try:
+            info = {
+                'id': getattr(repo, 'id', None),
+                'name': getattr(repo, 'full_name', None),
+                'full_name': getattr(repo, 'full_name', None),
+                'description': getattr(repo, 'description', 'No description'),
+                'url': getattr(repo, 'html_url', None),
+                'clone_url': getattr(repo, 'clone_url', None),
+                'stars': getattr(repo, 'stargazers_count', 0),
+                'forks': getattr(repo, 'forks_count', 0),
+                'language': getattr(repo, 'language', 'Unknown'),
+                'default_branch': getattr(repo, 'default_branch', 'main')
             }
-        }
+            
+            # Safe extraction for potentially missing/complex attributes
+            try:
+                info['topics'] = repo.get_topics()
+            except:
+                info['topics'] = []
+                
+            try:
+                info['owner'] = {
+                    'login': repo.owner.login,
+                    'avatar_url': repo.owner.avatar_url
+                }
+            except:
+                info['owner'] = {'login': 'unknown', 'avatar_url': ''}
+                
+            return info
+        except Exception as e:
+            print(f"  ⚠ Error extracting repo info: {e}")
+            return {'name': 'Unknown Repository', 'error': str(e)}
     
     def clone_repository(self, repo_url, target_path, branch=None, depth=1):
         """
@@ -164,37 +163,65 @@ class GitHubCollector:
         try:
             print(f"📦 Cloning repository: {repo_url}")
             
-            # Prepare clone arguments
-            clone_args = {
-                'url': repo_url,
-                'to_path': target_path,
-                'depth': depth
-            }
+            # Delete target path if it exists and is empty or we want to overwrite
+            if os.path.exists(target_path):
+                import shutil
+                shutil.rmtree(target_path)
+            os.makedirs(target_path, exist_ok=True)
             
-            if branch:
-                clone_args['branch'] = branch
+            # Try cloning with branch if provided
+            import subprocess
             
-            # Clone repository
-            repo = git.Repo.clone_from(**clone_args)
+            def attempt_clone(b=None):
+                cmd = ['git', 'clone', '--depth', str(depth)]
+                if b:
+                    cmd.extend(['--branch', b])
+                cmd.extend([repo_url, target_path])
+                
+                print(f"  Running: {' '.join(cmd)}")
+                return subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=90
+                )
+
+            # 1. Try requested branch
+            process = attempt_clone(branch)
+            
+            # 2. If failed and we requested 'main', try 'master'
+            if process.returncode != 0 and branch == 'main':
+                print(f"  ⚠ Clone failed for 'main', trying 'master'...")
+                if os.path.exists(target_path):
+                    shutil.rmtree(target_path)
+                process = attempt_clone('master')
+                
+            # 3. If still failed, try default branch
+            if process.returncode != 0:
+                print(f"  ⚠ Clone failed with branch, trying default branch...")
+                if os.path.exists(target_path):
+                    shutil.rmtree(target_path)
+                process = attempt_clone(None)
+
+            if process.returncode != 0:
+                result['error'] = f"Git clone failed: {process.stderr}"
+                print(f"❌ {result['error']}")
+                return result
+            
+            # Initialize GitPython Repo object
+            repo = git.Repo(target_path)
             
             # Get clone information
             result['success'] = True
             result['path'] = target_path
             result['branch'] = repo.active_branch.name
             result['commit'] = repo.head.commit.hexsha
-            result['commit_message'] = repo.head.commit.message.strip()
-            result['commit_author'] = str(repo.head.commit.author)
-            result['commit_date'] = repo.head.commit.committed_datetime.isoformat()
             
             print(f"✅ Repository cloned successfully")
-            print(f"   Path: {target_path}")
-            print(f"   Branch: {result['branch']}")
-            print(f"   Commit: {result['commit'][:8]}")
             
-        except git.GitCommandError as e:
-            result['error'] = f"Git command failed: {e}"
+        except subprocess.TimeoutExpired:
+            result['error'] = "Git clone timed out after 120 seconds"
             print(f"❌ {result['error']}")
-            
         except Exception as e:
             result['error'] = f"Unexpected error: {e}"
             print(f"❌ {result['error']}")

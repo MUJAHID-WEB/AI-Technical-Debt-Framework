@@ -69,14 +69,14 @@ class ValidationEngine:
         # Estimate for isolated vs non-isolated
         if isolated_systems:
             # Isolated systems should have lower MES
-            isolated_mes = np.mean([s.get('mes_estimate', mes_score * 0.6) for s in isolated_systems])
+            isolated_mes = float(np.mean([s.get('mes_estimate', mes_score * 0.6) for s in isolated_systems]))
         else:
-            isolated_mes = mes_score * 0.6  # Estimate
+            isolated_mes = float(mes_score * 0.6)  # Estimate
         
         if non_isolated_systems:
-            non_isolated_mes = np.mean([s.get('mes_estimate', mes_score * 1.4) for s in non_isolated_systems])
+            non_isolated_mes = float(np.mean([s.get('mes_estimate', mes_score * 1.4) for s in non_isolated_systems]))
         else:
-            non_isolated_mes = mes_score * 1.4  # Estimate
+            non_isolated_mes = float(mes_score * 1.4)  # Estimate
         
         self.results['avg_isolated_mes'] = round(isolated_mes, 2)
         self.results['avg_non_isolated_mes'] = round(non_isolated_mes, 2)
@@ -219,11 +219,11 @@ class ValidationEngine:
         correlations['mes_impact'] = round(self._calculate_single_correlation(mes, impact_norm), 2)
         
         # Combined correlation
-        correlations['combined'] = round(np.mean([
+        correlations['combined'] = round(float(np.mean([
             correlations['mes_churn'],
             correlations['mes_bug'],
             correlations['mes_impact']
-        ]), 2)
+        ])), 2)
         
         self.results['correlations'] = correlations
         

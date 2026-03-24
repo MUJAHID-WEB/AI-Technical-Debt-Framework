@@ -7,7 +7,9 @@ import threading
 import time
 import traceback
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, send_file, session, Response
+import numpy as np
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, send_file
+from flask.json.provider import DefaultJSONProvider
 from werkzeug.utils import secure_filename
 
 # Import enhanced modules
@@ -22,12 +24,36 @@ from analyzers.tier5_maintainability import MaintainabilityAnalyzer
 from analyzers.tier6_validator import ValidationEngine
 from utils.report_generator import ReportGenerator
 from detectors.language_detector import LanguageDetector
+from utils.ai_analyzer import AIAnalyzer
 
 app = Flask(__name__)
 app.secret_key = 'ai-debt-framework-secret-key-change-in-production'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['RESULTS_FOLDER'] = 'results'
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max upload
+
+# Ensure folders exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['RESULTS_FOLDER'], exist_ok=True)
+
+class CustomJSONProvider(DefaultJSONProvider):
+    def default(self, o):
+        if isinstance(o, set):
+            return list(o)
+        if isinstance(o, np.integer):
+            return int(o)
+        if isinstance(o, np.floating):
+            return float(o)
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        if hasattr(o, '__dict__'):
+            return o.__dict__
+        try:
+            return super().default(o)
+        except TypeError:
+            return str(o)
+
+app.json = CustomJSONProvider(app)
 
 # Ensure directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -109,7 +135,7 @@ def upload_project():
         
         analysis_jobs[job_id].update({
             'status': 'uploading',
-            'progress': 10,
+            'progress': 5,
             'message': 'Uploading files...'
         })
         
@@ -125,7 +151,7 @@ def upload_project():
         if saved_files:
             analysis_jobs[job_id].update({
                 'status': 'extracting',
-                'progress': 15,
+                'progress': 10,
                 'message': f'Extracting {len(saved_files)} archive(s)...'
             })
             
@@ -151,8 +177,14 @@ def upload_project():
 @app.route('/job-status/<job_id>')
 def job_status(job_id):
     """Get real-time job status"""
-    if job_id in analysis_jobs:
-        return jsonify(analysis_jobs[job_id])
+    if job_id not in analysis_jobs:
+        return jsonify({'error': 'Job not found'}), 404
+        
+    job_data = analysis_jobs[job_id]
+    # Debug print to verify what's being sent
+    print(f"DEBUG: Job {job_id} - status: {job_data.get('status')}, progress: {job_data.get('progress')}")
+    
+    return jsonify(job_data)
     
     # Check if results exist
     results_path = os.path.join(app.config['RESULTS_FOLDER'], f'{job_id}_results.json')
@@ -170,6 +202,22 @@ def job_status(job_id):
             pass
     
     return jsonify({'status': 'not_found'}), 404
+
+@app.route('/api/collectors/github/search', methods=['POST'])
+def github_search():
+    """Search for GitHub repositories"""
+    try:
+        data = request.json
+        query = data.get('query', '')
+        if not query:
+            return jsonify({'error': 'Query is required'}), 400
+            
+        collector = GitHubCollector()
+        results = collector.search_repositories(query)
+        return jsonify(results)
+    except Exception as e:
+        print(f"GitHub search error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/results/<job_id>')
 def show_results(job_id):
@@ -198,6 +246,23 @@ def show_results(job_id):
     return render_template('analysis.html', 
                          job_id=job_id, 
                          error='Job not found')
+
+@app.route('/ai-analysis/<job_id>')
+def ai_analysis(job_id):
+    """Generate AI-powered architectural insights"""
+    results_path = os.path.join(app.config['RESULTS_FOLDER'], f'{job_id}_results.json')
+    if not os.path.exists(results_path):
+        return jsonify({"error": "Results not found"}), 404
+        
+    try:
+        with open(results_path, 'r') as f:
+            results = json.load(f)
+            
+        analyzer = AIAnalyzer()
+        ai_result = analyzer.analyze_results(results)
+        return jsonify(ai_result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/download-report/<job_id>')
 def download_report(job_id):
@@ -242,7 +307,7 @@ def process_local_upload(job_id, upload_path, archive_files):
         
         analysis_jobs[job_id].update({
             'status': 'extracting',
-            'progress': 20,
+            'progress': 12,
             'message': 'Extracting archives...'
         })
         
@@ -275,7 +340,7 @@ def process_github_repo(job_id, repo_url, branch):
     try:
         analysis_jobs[job_id].update({
             'status': 'cloning',
-            'progress': 10,
+            'progress': 5,
             'message': f'Cloning {repo_url}...'
         })
         
@@ -288,17 +353,19 @@ def process_github_repo(job_id, repo_url, branch):
         if result.get('success'):
             analysis_jobs[job_id].update({
                 'status': 'analyzing',
-                'progress': 20,
-                'message': 'Repository cloned, starting analysis...'
+                'progress': 15,
+                'message': 'Repository cloned successfully, starting analysis...'
             })
             
             run_complete_analysis(job_id, clone_path)
         else:
+            error_msg = result.get('error', 'Unknown clone error')
             analysis_jobs[job_id].update({
                 'status': 'error',
-                'error': result.get('error'),
-                'message': f'Clone failed: {result.get("error")}'
+                'error': error_msg,
+                'message': f'Clone failed: {error_msg}'
             })
+            print(f"❌ Job {job_id} failed: {error_msg}")
             
     except Exception as e:
         print(f"GitHub processing error: {e}")
@@ -314,7 +381,7 @@ def process_mlops_project(job_id, platform, endpoint):
     try:
         analysis_jobs[job_id].update({
             'status': 'collecting',
-            'progress': 10,
+            'progress': 5,
             'message': f'Collecting from {platform}...'
         })
         
@@ -327,7 +394,7 @@ def process_mlops_project(job_id, platform, endpoint):
         if result.get('success'):
             analysis_jobs[job_id].update({
                 'status': 'analyzing',
-                'progress': 20,
+                'progress': 15,
                 'message': 'Data collected, starting analysis...'
             })
             
@@ -376,7 +443,7 @@ def run_complete_analysis(job_id, project_path):
         # ===== TIER 1: DATA COLLECTION =====
         analysis_jobs[job_id].update({
             'current_tier': 1,
-            'progress': 20,
+            'progress': int(15),
             'message': 'TIER 1: Collecting project data...',
             'tier_status': {1: 'running'}
         })
@@ -392,11 +459,13 @@ def run_complete_analysis(job_id, project_path):
         print(f"  ✓ Language: {tier1_result.get('language', 'Unknown')}")
         print(f"  ✓ Project Type: {tier1_result.get('project_type', 'Unknown')}")
         print(f"  ✓ Files Found: {tier1_result.get('file_count', 0)}")
+        print(f"  ✓ Project Size: {tier1_result.get('statistics', {}).get('total_size_hr', 'Unknown')}")
         print(f"  ✓ Services: {len(tier1_result.get('services', []))}")
         print(f"  ✓ Models: {len(tier1_result.get('models', []))}")
         print(f"  ✓ Pipelines: {len(tier1_result.get('pipelines', []))}")
         
         analysis_jobs[job_id].update({
+            'progress': 30,
             'tier_status': {1: 'complete'},
             'tier_results': {'tier1': tier1_result}
         })
@@ -404,7 +473,7 @@ def run_complete_analysis(job_id, project_path):
         # ===== TIER 2: SYSTEM ANALYSIS =====
         analysis_jobs[job_id].update({
             'current_tier': 2,
-            'progress': 35,
+            'progress': int(30),
             'message': 'TIER 2: Analyzing system architecture...',
             'tier_status': {1: 'complete', 2: 'running'}
         })
@@ -423,6 +492,7 @@ def run_complete_analysis(job_id, project_path):
         print(f"  ✓ Dependencies: {tier2_result.get('dependency_count', 0)}")
         
         analysis_jobs[job_id].update({
+            'progress': 45,
             'tier_status': {1: 'complete', 2: 'complete'},
             'tier_results': {**analysis_jobs[job_id].get('tier_results', {}), 'tier2': tier2_result}
         })
@@ -430,7 +500,7 @@ def run_complete_analysis(job_id, project_path):
         # ===== TIER 3: AI SMELL DETECTION =====
         analysis_jobs[job_id].update({
             'current_tier': 3,
-            'progress': 50,
+            'progress': 45,
             'message': 'TIER 3: Detecting AI architectural smells...',
             'tier_status': {1: 'complete', 2: 'complete', 3: 'running'}
         })
@@ -448,6 +518,7 @@ def run_complete_analysis(job_id, project_path):
         print(f"  ✓ Complex Pipelines: {tier3_result.get('complex_pipelines', 0)}")
         
         analysis_jobs[job_id].update({
+            'progress': int(60),
             'tier_status': {1: 'complete', 2: 'complete', 3: 'complete'},
             'tier_results': {**analysis_jobs[job_id].get('tier_results', {}), 'tier3': tier3_result}
         })
@@ -455,7 +526,7 @@ def run_complete_analysis(job_id, project_path):
         # ===== TIER 4: METRICS COMPUTATION =====
         analysis_jobs[job_id].update({
             'current_tier': 4,
-            'progress': 65,
+            'progress': 60,
             'message': 'TIER 4: Computing Model Entanglement Score...',
             'tier_status': {1: 'complete', 2: 'complete', 3: 'complete', 4: 'running'}
         })
@@ -474,6 +545,7 @@ def run_complete_analysis(job_id, project_path):
             print(f"    - {comp}: {val:.2f}")
         
         analysis_jobs[job_id].update({
+            'progress': int(75),
             'tier_status': {1: 'complete', 2: 'complete', 3: 'complete', 4: 'complete'},
             'tier_results': {**analysis_jobs[job_id].get('tier_results', {}), 'tier4': tier4_result}
         })
@@ -481,7 +553,7 @@ def run_complete_analysis(job_id, project_path):
         # ===== TIER 5: MAINTAINABILITY =====
         analysis_jobs[job_id].update({
             'current_tier': 5,
-            'progress': 80,
+            'progress': 75,
             'message': 'TIER 5: Analyzing maintainability...',
             'tier_status': {1: 'complete', 2: 'complete', 3: 'complete', 4: 'complete', 5: 'running'}
         })
@@ -498,6 +570,7 @@ def run_complete_analysis(job_id, project_path):
         print(f"  ✓ Change Impact: {tier5_result.get('avg_impact', 0):.1f} files/change")
         
         analysis_jobs[job_id].update({
+            'progress': 85,
             'tier_status': {1: 'complete', 2: 'complete', 3: 'complete', 4: 'complete', 5: 'complete'},
             'tier_results': {**analysis_jobs[job_id].get('tier_results', {}), 'tier5': tier5_result}
         })
@@ -505,7 +578,7 @@ def run_complete_analysis(job_id, project_path):
         # ===== TIER 6: VALIDATION =====
         analysis_jobs[job_id].update({
             'current_tier': 6,
-            'progress': 90,
+            'progress': 85,
             'message': 'TIER 6: Validating hypotheses...',
             'tier_status': {1: 'complete', 2: 'complete', 3: 'complete', 4: 'complete', 5: 'complete', 6: 'running'}
         })
@@ -549,7 +622,7 @@ def run_complete_analysis(job_id, project_path):
         # Mark as complete
         analysis_jobs[job_id].update({
             'status': 'complete',
-            'progress': 100,
+            'progress': int(100),
             'message': 'Analysis complete!',
             'tier_status': {i: 'complete' for i in range(1, 7)},
             'results': tier_results,

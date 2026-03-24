@@ -23,15 +23,25 @@ class ReportGenerator:
     
     def _create_custom_styles(self):
         """Create custom styles for the report"""
+        # Enterprise Colors (Professional Slate & Cyan Palette)
+        self.primary_blue = colors.HexColor('#0062ff')
+        self.secondary_blue = colors.HexColor('#00f3ff')
+        self.slate_900 = colors.HexColor('#0f172a')
+        self.slate_700 = colors.HexColor('#334155')
+        self.slate_500 = colors.HexColor('#64748b')
+        self.slate_100 = colors.HexColor('#f1f5f9')
+        self.border_color = colors.HexColor('#e2e8f0')
+
         # Title style
         if 'CustomTitle' not in self.styles:
             self.styles.add(ParagraphStyle(
                 name='CustomTitle',
                 parent=self.styles['Heading1'],
-                fontSize=24,
+                fontSize=28,
                 alignment=TA_CENTER,
                 spaceAfter=30,
-                textColor=colors.HexColor('#0d6efd')
+                textColor=self.slate_900,
+                fontName='Helvetica-Bold'
             ))
         
         # Heading style
@@ -40,8 +50,9 @@ class ReportGenerator:
                 name='CustomHeading',
                 parent=self.styles['Heading2'],
                 fontSize=18,
-                spaceAfter=12,
-                textColor=colors.HexColor('#0d6efd')
+                spaceAfter=14,
+                textColor=self.primary_blue,
+                fontName='Helvetica-Bold'
             ))
         
         # Subheading style
@@ -49,9 +60,11 @@ class ReportGenerator:
             self.styles.add(ParagraphStyle(
                 name='CustomSubheading',
                 parent=self.styles['Heading3'],
-                fontSize=14,
-                spaceAfter=6,
-                textColor=colors.HexColor('#495057')
+                fontSize=12,
+                spaceAfter=8,
+                textColor=self.slate_700,
+                fontName='Helvetica-Bold',
+                textTransform='uppercase'
             ))
         
         # Body style
@@ -60,19 +73,27 @@ class ReportGenerator:
                 name='CustomBody',
                 parent=self.styles['Normal'],
                 fontSize=10,
-                spaceAfter=6,
-                leading=14
+                spaceAfter=10,
+                leading=16,
+                textColor=self.slate_700
             ))
         
-        # Footer style
-        if 'CustomFooter' not in self.styles:
-            self.styles.add(ParagraphStyle(
-                name='CustomFooter',
-                parent=self.styles['Normal'],
-                fontSize=8,
-                alignment=TA_CENTER,
-                textColor=colors.gray
-            ))
+        # Table styles
+        self.main_table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.slate_900),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [self.slate_100, colors.white]),
+            ('GRID', (0, 0), (-1, -1), 0.5, self.border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+        ])
     
     def generate_pdf(self, output_path):
         """Generate complete PDF report"""
@@ -131,76 +152,84 @@ class ReportGenerator:
     def _create_title_page(self):
         """Create title page"""
         story = []
+        story.append(Spacer(1, 100))
+        
+        # Logo/Icon Placeholder (styled box)
+        logo_data = [['   AI TECHNICAL DEBT FRAMEWORK   ']]
+        logo_table = Table(logo_data, colWidths=[400])
+        logo_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), self.primary_blue),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+            ('TOPPADDING', (0, 0), (-1, -1), 15),
+            ('ROUNDEDCORNERS', [10, 10, 10, 10])
+        ]))
+        story.append(logo_table)
+        story.append(Spacer(1, 50))
         
         # Title
-        story.append(Paragraph("AI Technical Debt Management Framework", self.styles['CustomTitle']))
-        story.append(Spacer(1, 20))
+        story.append(Paragraph("System Architectural Audit Report", self.styles['CustomTitle']))
+        story.append(Spacer(1, 10))
         
         # Subtitle
-        story.append(Paragraph("Comprehensive Architectural Analysis Report", self.styles['CustomHeading']))
-        story.append(Spacer(1, 40))
+        story.append(Paragraph("Comprehensive Analysis of Model Entanglement and Technical Debt", self.styles['CustomSubheading']))
+        story.append(Spacer(1, 60))
         
-        # MES Score
+        # MES Score Visual
         mes_score = self.results.get('tier4', {}).get('mes_score', 'N/A')
         mes_level = self.results.get('tier4', {}).get('mes_level', 'UNKNOWN')
         
         # Color based on score
         if isinstance(mes_score, (int, float)):
-            if mes_score <= 3:
-                color = colors.green
-            elif mes_score <= 7:
-                color = colors.orange
-            else:
-                color = colors.red
-        else:
-            color = colors.blue
+            if mes_score <= 3: color = colors.HexColor('#10b981') # Emerald
+            elif mes_score <= 7: color = colors.HexColor('#f59e0b') # Amber
+            else: color = colors.HexColor('#ef4444') # Red
+        else: color = self.primary_blue
         
-        score_style = ParagraphStyle(
-            'ScoreStyle',
-            parent=self.styles['CustomHeading'],
-            fontSize=48,
-            textColor=color,
-            alignment=TA_CENTER
-        )
+        score_box_data = [
+            [Paragraph("MODEL ENTANGLEMENT SCORE", ParagraphStyle('ScoreLabel', fontSize=10, textColor=self.slate_500, alignment=TA_CENTER))],
+            [Paragraph(f"{mes_score}/10", ParagraphStyle('ScoreVal', fontSize=56, textColor=color, fontName='Helvetica-Bold', alignment=TA_CENTER))],
+            [Paragraph(f"Classification: {mes_level}", ParagraphStyle('ScoreLevel', fontSize=14, textColor=self.slate_700, fontName='Helvetica-Bold', alignment=TA_CENTER))]
+        ]
+        score_table = Table(score_box_data, colWidths=[300])
+        score_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), self.slate_100),
+            ('BOX', (0, 0), (-1, -1), 1, self.border_color),
+            ('LEFTPADDING', (0, 0), (-1, -1), 20),
+            ('REGPADDING', (0, 0), (-1, -1), 20),
+            ('TOPPADDING', (0, 0), (-1, -1), 20),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 20),
+        ]))
+        story.append(score_table)
+        story.append(Spacer(1, 80))
         
-        story.append(Paragraph(f"{mes_score}/10", score_style))
-        story.append(Paragraph(f"Level: {mes_level}", self.styles['CustomHeading']))
-        story.append(Spacer(1, 40))
-        
-        # Project Info
+        # Meta Info
         tier1 = self.results.get('tier1', {})
         project_info = tier1.get('project_info', {})
-        
-        info_data = [
-            ['Project:', project_info.get('name', 'Unknown')],
-            ['Language:', project_info.get('language', 'Unknown')],
-            ['Type:', project_info.get('project_type', 'Unknown')],
-            ['Files:', str(tier1.get('statistics', {}).get('total_files', 0))],
-            ['Services:', str(tier1.get('statistics', {}).get('services_count', 0))],
-            ['Models:', str(tier1.get('statistics', {}).get('models_count', 0))]
+        timestamp = self.results.get('timestamp', datetime.now().isoformat())
+        try: date_str = datetime.fromisoformat(timestamp).strftime('%B %d, %Y')
+        except: date_str = datetime.now().strftime('%B %d, %Y')
+
+        meta_data = [
+            ['PROJECT IDENTIFIER', project_info.get('name', 'Unknown').upper()],
+            ['TECHNOLOGY STACK', project_info.get('language', 'Unknown').upper()],
+            ['AUDIT TIMESTAMP', date_str.upper()],
+            ['REPORT SERIAL', self.results.get('job_id', 'N/A').upper()[:12]]
         ]
         
-        info_table = Table(info_data, colWidths=[100, 300])
-        info_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
-            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        meta_table = Table(meta_data, colWidths=[150, 250])
+        meta_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('TEXTCOLOR', (0, 0), (0, -1), self.slate_500),
+            ('TEXTCOLOR', (1, 0), (1, -1), self.slate_900),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('LINEBELOW', (0, 0), (-1, -1), 0.5, self.border_color),
         ]))
-        
-        story.append(info_table)
-        story.append(Spacer(1, 30))
-        
-        # Date
-        timestamp = self.results.get('timestamp', datetime.now().isoformat())
-        try:
-            date_str = datetime.fromisoformat(timestamp).strftime('%B %d, %Y')
-        except:
-            date_str = datetime.now().strftime('%B %d, %Y')
-        
-        story.append(Paragraph(f"Generated: {date_str}", self.styles['CustomBody']))
+        story.append(meta_table)
         
         return story
     
@@ -208,64 +237,47 @@ class ReportGenerator:
         """Create executive summary"""
         story = []
         
-        story.append(Paragraph("Executive Summary", self.styles['CustomHeading']))
+        story.append(Paragraph("I. EXECUTIVE SUMMARY", self.styles['CustomHeading']))
         story.append(Spacer(1, 12))
         
+        story.append(Paragraph(
+            "This document provides a technical audit of the architectural integrity and model entanglement within the analyzed repository. "
+            "The following findings represent a high-level overview of the system's current hygiene and technical debt status.",
+            self.styles['CustomBody']
+        ))
+        story.append(Spacer(1, 10))
+        
         # Key Findings
-        story.append(Paragraph("Key Findings:", self.styles['CustomSubheading']))
+        story.append(Paragraph("CRITICAL ARCHITECTURAL FINDINGS:", self.styles['CustomSubheading']))
+        story.append(Spacer(1, 6))
         
         findings = []
-        
-        # MES interpretation
         mes_score = self.results.get('tier4', {}).get('mes_score', 0)
-        if mes_score <= 3:
-            findings.append("• ✅ Low model entanglement - architecture is well-isolated")
-        elif mes_score <= 7:
-            findings.append("• ⚠ Medium model entanglement - some architectural debt detected")
-        else:
-            findings.append("• ❌ CRITICAL: High model entanglement - immediate action required")
+        if mes_score <= 3: findings.append("<b>OPTIMAL:</b> Model entanglement is within safe operational parameters.")
+        elif mes_score <= 7: findings.append("<b>CAUTION:</b> Moderate model entanglement detected - architectural degradation in progress.")
+        else: findings.append("<b>CRITICAL:</b> High model entanglement - system maintainability is severely compromised.")
         
-        # Smells detected
         tier3 = self.results.get('tier3', {})
-        direct_calls = tier3.get('direct_model_calls', {}).get('count', 0)
-        if direct_calls > 0:
-            findings.append(f"• 🔴 {direct_calls} services directly call ML models")
-        
-        hidden = len(tier3.get('hidden_consumers', []))
-        if hidden > 0:
-            findings.append(f"• 🕵️ {hidden} hidden model consumers detected")
+        direct_count = tier3.get('direct_model_calls', {}).get('count', 0)
+        if direct_count > 0: findings.append(f"<b>COUPLING:</b> {direct_count} services exhibit direct model dependency (Anti-pattern).")
         
         glue = tier3.get('glue_code_ratio', 0)
-        if glue > 0.2:
-            findings.append(f"• 🔧 Glue code represents {glue:.1%} of codebase")
-        
-        # Hypothesis
-        tier6 = self.results.get('tier6', {})
-        if tier6.get('hypothesis_confirmed', False):
-            findings.append("• 📊 Hypothesis CONFIRMED: Isolated systems degrade 3x slower")
-        else:
-            findings.append("• 📊 Hypothesis partially confirmed")
+        if glue > 0.2: findings.append(f"<b>COMPLEXITY:</b> Glue code represents {glue:.1%} of analyzed logic assets.")
         
         for finding in findings:
-            story.append(Paragraph(finding, self.styles['CustomBody']))
+            story.append(Paragraph(f"• {finding}", self.styles['CustomBody']))
         
         story.append(Spacer(1, 20))
         
         # Top Recommendations
-        story.append(Paragraph("Top Recommendations:", self.styles['CustomSubheading']))
+        story.append(Paragraph("PRIMARY MITIGATION STRATEGIES:", self.styles['CustomSubheading']))
+        story.append(Spacer(1, 6))
         
         recommendations = self.results.get('recommendations', [])[:3]
         for i, rec in enumerate(recommendations, 1):
-            priority_color = {
-                'CRITICAL': colors.red,
-                'HIGH': colors.orange,
-                'MEDIUM': colors.blue,
-                'LOW': colors.gray
-            }.get(rec.get('priority', 'LOW'), colors.black)
-            
-            rec_text = f"{i}. [{rec.get('priority', 'LOW')}] {rec.get('title', 'No title')}"
-            story.append(Paragraph(rec_text, self.styles['CustomBody']))
-            story.append(Paragraph(f"   {rec.get('description', '')}", self.styles['CustomBody']))
+            story.append(Paragraph(f"<b>{i}. {rec.get('title', '').upper()}</b>", self.styles['CustomBody']))
+            story.append(Paragraph(f"<i>Classification: {rec.get('priority', 'LOW')} Priority</i>", 
+                                 ParagraphStyle('ItalBody', parent=self.styles['CustomBody'], fontSize=8)))
         
         return story
     
@@ -281,45 +293,31 @@ class ReportGenerator:
         
         # Overview table
         data = [
-            ['Metric', 'Value'],
-            ['Services Found', str(stats.get('services_count', 0))],
-            ['Models Found', str(stats.get('models_count', 0))],
-            ['Pipelines Found', str(stats.get('pipelines_count', 0))],
-            ['Total Files', str(stats.get('total_files', 0))],
-            ['Total Size', stats.get('total_size_mb', 0) > 0 and f"{stats['total_size_mb']} MB" or '0 MB']
+            ['METRIC', 'SPECIFICATION'],
+            ['SERVICES DETECTED', str(stats.get('services_count', 0))],
+            ['MODELS IDENTIFIED', str(stats.get('models_count', 0))],
+            ['PIPELINES MAPPED', str(stats.get('pipelines_count', 0))],
+            ['TOTAL FILE COUNT', str(stats.get('total_files', 0))],
+            ['TOTAL FOOTPRINT', stats.get('total_size_mb', 0) > 0 and f"{stats['total_size_mb']} MB" or '0 MB']
         ]
         
         table = Table(data, colWidths=[200, 200])
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
-        
+        table.setStyle(self.main_table_style)
         story.append(table)
-        story.append(Spacer(1, 12))
+        story.append(Spacer(1, 20))
         
         # Languages
         languages = tier1.get('languages', {})
         if languages:
-            story.append(Paragraph("Languages Detected:", self.styles['CustomSubheading']))
+            story.append(Paragraph("LANGUAGE DISTRIBUTION OVERVIEW", self.styles['CustomSubheading']))
+            story.append(Spacer(1, 8))
             
-            lang_data = [['Language', 'Files']]
-            for lang, count in list(languages.items())[:10]:
-                lang_data.append([lang, str(count)])
+            lang_data = [['LANGUAGE ASSET', 'FILE QUANTITY']]
+            for lang, count in list(languages.items())[:12]:
+                lang_data.append([lang.upper(), str(count)])
             
-            lang_table = Table(lang_data, colWidths=[200, 100])
-            lang_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            
+            lang_table = Table(lang_data, colWidths=[200, 200])
+            lang_table.setStyle(self.main_table_style)
             story.append(lang_table)
         
         return story
@@ -337,23 +335,18 @@ class ReportGenerator:
         story.append(Paragraph(f"Services Detected: {len(services)}", self.styles['CustomSubheading']))
         
         if services:
-            service_data = [['Service Name', 'Language', 'Endpoints']]
-            for service in services[:10]:
+            service_data = [['IDENTIFIED SERVICE', 'PRIMARY STACK', 'ENDPOINT CAPACITY']]
+            for service in services[:15]:
                 service_data.append([
-                    service.get('name', 'Unknown'),
-                    service.get('language', 'Unknown'),
+                    service.get('name', 'Unknown').upper(),
+                    service.get('language', 'Unknown').upper(),
                     str(service.get('endpoint_count', 0))
                 ])
             
-            service_table = Table(service_data, colWidths=[150, 100, 80])
-            service_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            
+            service_table = Table(service_data, colWidths=[180, 120, 100])
+            service_table.setStyle(self.main_table_style)
             story.append(service_table)
-            story.append(Spacer(1, 12))
+            story.append(Spacer(1, 20))
         
         # Frameworks
         frameworks = tier2.get('frameworks', [])
@@ -373,27 +366,26 @@ class ReportGenerator:
         tier3 = self.results.get('tier3', {})
         
         # Smells summary
-        smell_data = [
-            ['Smell Type', 'Value', 'Severity'],
-            ['Direct Model Calls', f"{tier3.get('direct_model_calls', {}).get('count', 0)} services", 
-             'HIGH' if tier3.get('direct_model_calls', {}).get('ratio', 0) > 0.3 else 'LOW'],
-            ['Glue Code Ratio', f"{tier3.get('glue_code_ratio', 0):.1%}", 
-             'HIGH' if tier3.get('glue_code_ratio', 0) > 0.2 else 'LOW'],
-            ['Hidden Consumers', str(len(tier3.get('hidden_consumers', []))), 
-             'HIGH' if len(tier3.get('hidden_consumers', [])) > 0 else 'LOW'],
-            ['Complex Pipelines', str(tier3.get('pipeline_complexity', {}).get('complex_pipelines', 0)), 
-             'MEDIUM' if tier3.get('pipeline_complexity', {}).get('complex_pipelines', 0) > 0 else 'LOW'],
-            ['Retrain Frequency', f"{tier3.get('retrain_frequency', 0)}/month", 
-             'MEDIUM' if tier3.get('retrain_frequency', 0) > 4 else 'LOW']
-        ]
+        smell_data = [['SMELL CLASSIFICATION', 'DETECTED VALUE', 'CRITICALITY']]
         
-        smell_table = Table(smell_data, colWidths=[150, 100, 80])
-        smell_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ffc107')),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
+        direct_count = tier3.get('direct_model_calls', {}).get('count', 0)
+        glue_ratio = tier3.get('glue_code_ratio', 0)
         
+        smell_data.append(['DIRECT MODEL COUPLING', f"{direct_count} SERVICES", 'CRITICAL' if direct_count > 0 else 'EXEMPT'])
+        smell_data.append(['GLUE CODE PROLIFERATION', f"{glue_ratio:.1%}", 'HIGH' if glue_ratio > 0.2 else 'NOMINAL'])
+        smell_data.append(['HIDDEN MODEL CONSUMERS', str(len(tier3.get('hidden_consumers', []))), 'HIGH' if len(tier3.get('hidden_consumers', [])) > 0 else 'EXEMPT'])
+        
+        smell_table = Table(smell_data, colWidths=[180, 120, 100])
+        smell_table.setStyle(self.main_table_style)
+        
+        # Apply conditional coloring to severity column
+        for i, row in enumerate(smell_data[1:], 1):
+            severity = row[2]
+            if severity in ['CRITICAL', 'HIGH']:
+                smell_table.setStyle(TableStyle([('TEXTCOLOR', (2, i), (2, i), colors.HexColor('#ef4444'))]))
+            elif severity == 'NOMINAL':
+                smell_table.setStyle(TableStyle([('TEXTCOLOR', (2, i), (2, i), colors.HexColor('#10b981'))]))
+
         story.append(smell_table)
         
         return story
@@ -434,9 +426,10 @@ class ReportGenerator:
         story.append(Spacer(1, 12))
         
         # Components
-        story.append(Paragraph("Component Breakdown:", self.styles['CustomSubheading']))
+        story.append(Paragraph("SPECIFIC COMPONENT BREAKDOWN", self.styles['CustomSubheading']))
+        story.append(Spacer(1, 8))
         
-        comp_data = [['Component', 'Value', 'Weight', 'Contribution']]
+        comp_data = [['COMPONENT CATEGORY', 'SATURATION', 'WEIGHTING', 'IMPACT']]
         weights = tier4.get('weights', {})
         contributions = tier4.get('contributions', {})
         
@@ -445,19 +438,14 @@ class ReportGenerator:
             contribution = contributions.get(comp, 0) * 10
             
             comp_data.append([
-                comp.replace('_', ' ').title(),
+                comp.replace('_', ' ').upper(),
                 f"{value:.1%}",
                 f"{weight:.1%}",
                 f"{contribution:.2f}"
             ])
         
-        comp_table = Table(comp_data, colWidths=[150, 80, 80, 80])
-        comp_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
-        
+        comp_table = Table(comp_data, colWidths=[140, 80, 80, 80])
+        comp_table.setStyle(self.main_table_style)
         story.append(comp_table)
         
         return story
@@ -479,21 +467,16 @@ class ReportGenerator:
         
         # Key metrics
         data = [
-            ['Metric', 'Value'],
-            ['Total Commits', str(tier5.get('commit_count', 0))],
-            ['Contributors', str(len(tier5.get('contributors', [])))],
-            ['Bug Rate', f"{tier5.get('bug_metrics', {}).get('bug_rate', 0):.1%}"],
-            ['Bug Count', str(tier5.get('bug_metrics', {}).get('bug_count', 0))],
-            ['Avg Change Impact', f"{tier5.get('impact_metrics', {}).get('avg_impact', 0):.1f} files"]
+            ['OPERATIONAL METRIC', 'QUANTITATIVE VALUE'],
+            ['HISTORICAL COMMIT VOLUME', str(tier5.get('commit_count', 0))],
+            ['CONTRIBUTOR DENSITY', str(len(tier5.get('contributors', [])))],
+            ['ANOMALY/BUG FREQUENCY', f"{tier5.get('bug_metrics', {}).get('bug_rate', 0):.1%}"],
+            ['TOTAL DEFECT COUNT', str(tier5.get('bug_metrics', {}).get('bug_count', 0))],
+            ['AVERAGE CHANGE RADIUS', f"{tier5.get('impact_metrics', {}).get('avg_impact', 0):.1f} FILES"]
         ]
         
-        metrics_table = Table(data, colWidths=[150, 150])
-        metrics_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
-        
+        metrics_table = Table(data, colWidths=[200, 200])
+        metrics_table.setStyle(self.main_table_style)
         story.append(metrics_table)
         
         return story
@@ -541,20 +524,15 @@ class ReportGenerator:
         correlations = tier6.get('correlations', {})
         
         corr_data = [
-            ['Correlation', 'Value'],
-            ['MES vs Churn', str(correlations.get('mes_churn', 0))],
-            ['MES vs Bugs', str(correlations.get('mes_bug', 0))],
-            ['MES vs Impact', str(correlations.get('mes_impact', 0))],
-            ['Combined', str(correlations.get('combined', 0))]
+            ['CORRELATION INDEX', 'STATISTICAL COEFFICIENT'],
+            ['MES SCORE VS CODE CHURN', str(correlations.get('mes_churn', 0))],
+            ['MES SCORE VS DEFECT DENSITY', str(correlations.get('mes_bug', 0))],
+            ['MES SCORE VS ARCHITECTURAL IMPACT', str(correlations.get('mes_impact', 0))],
+            ['AGGREGATED DEBT CORRELATION', str(correlations.get('combined', 0))]
         ]
         
-        corr_table = Table(corr_data, colWidths=[150, 100])
-        corr_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
-        
+        corr_table = Table(corr_data, colWidths=[220, 180])
+        corr_table.setStyle(self.main_table_style)
         story.append(corr_table)
         
         return story
@@ -569,30 +547,34 @@ class ReportGenerator:
         recommendations = self.results.get('recommendations', [])
         
         for i, rec in enumerate(recommendations, 1):
-            # Color based on priority
             priority = rec.get('priority', 'LOW')
-            if priority == 'CRITICAL':
-                color = colors.red
-            elif priority == 'HIGH':
-                color = colors.orange
-            elif priority == 'MEDIUM':
-                color = colors.blue
-            else:
-                color = colors.gray
+            p_color = {'CRITICAL': colors.HexColor('#ef4444'), 
+                      'HIGH': colors.HexColor('#f59e0b'), 
+                      'MEDIUM': colors.HexColor('#3b82f6'), 
+                      'LOW': self.slate_500}.get(priority, self.slate_500)
             
-            rec_style = ParagraphStyle(
-                f'Rec{i}Style',
-                parent=self.styles['CustomSubheading'],
-                textColor=color
-            )
+            story.append(Paragraph(f"{i}. {rec.get('title', '').upper()}", 
+                                 ParagraphStyle(f'RecTitle{i}', parent=self.styles['CustomSubheading'], textColor=p_color)))
             
-            story.append(Paragraph(f"{i}. [{priority}] {rec.get('title', '')}", rec_style))
             story.append(Paragraph(rec.get('description', ''), self.styles['CustomBody']))
-            story.append(Paragraph(
-                f"Effort: {rec.get('effort', 'Unknown')} | Impact: {rec.get('impact', 'Unknown')}",
-                self.styles['CustomBody']
-            ))
-            story.append(Spacer(1, 6))
+            
+            # Recommendation Details Table
+            rec_meta = [[
+                f"PRIORITY: {priority}",
+                f"EFFORT: {rec.get('effort', 'N/A').upper()}",
+                f"EST. IMPACT: {rec.get('impact', 'N/A').upper()}"
+            ]]
+            meta_tab = Table(rec_meta, colWidths=[130, 130, 130])
+            meta_tab.setStyle(TableStyle([
+                ('FONTSIZE', (0, 0), (-1, -1), 8),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+                ('TEXTCOLOR', (0, 0), (-1, -1), self.slate_500),
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+                ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+            ]))
+            story.append(meta_tab)
+            story.append(Spacer(1, 15))
         
         return story
     
@@ -600,13 +582,23 @@ class ReportGenerator:
         """Add header and footer to each page"""
         canvas.saveState()
         
-        # Header
-        canvas.setFont('Helvetica', 8)
-        canvas.drawString(72, doc.height + 72 + 20, "AI Technical Debt Management Framework")
+        # Header - Professional Bar
+        canvas.setStrokeColor(self.primary_blue)
+        canvas.setLineWidth(2)
+        canvas.line(72, doc.pagesize[1] - 50, doc.pagesize[0] - 72, doc.pagesize[1] - 50)
+        
+        canvas.setFont('Helvetica-Bold', 8)
+        canvas.setFillColor(self.slate_500)
+        canvas.drawString(72, doc.pagesize[1] - 45, "AI TECHNICAL DEBT ANALYTICS | CONFIDENTIAL")
         
         # Footer
+        canvas.setStrokeColor(self.border_color)
+        canvas.setLineWidth(0.5)
+        canvas.line(72, 50, doc.pagesize[0] - 72, 50)
+        
         canvas.setFont('Helvetica', 8)
-        canvas.drawString(72, 72 - 20, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        canvas.drawRightString(doc.width + 72, 72 - 20, f"Page {doc.page}")
+        canvas.setFillColor(self.slate_500)
+        canvas.drawString(72, 35, f"Audit Execution: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        canvas.drawRightString(doc.pagesize[0] - 72, 35, f"PAGE {doc.page} OF SECURED REPORT")
         
         canvas.restoreState()

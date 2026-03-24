@@ -10,13 +10,13 @@
 <div class="container pb-5">
     <div class="hero-section mb-5 py-5 text-center">
         <div class="mb-4">
-            <div class="mx-auto border border-main bg-surface-light d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; border-radius: 16px;">
-                <i class="fas fa-microchip text-primary fs-3"></i>
+            <div class="mx-auto glass-card d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; border-radius: 20px; padding: 0;">
+                <i class="fas fa-microchip text-accent fs-2"></i>
             </div>
         </div>
-        <h1 class="display-4 fw-bold mb-3 text-bright">AI Technical Debt <span class="text-primary">Analyzer</span></h1>
-        <p class="lead text-muted mx-auto" style="max-width: 650px;">
-            Identify hidden dependencies, model entanglement, and maintenance risks in your AI-enabled software architecture.
+        <h1 class="display-4 fw-bold mb-3 text-bright">AI Technical Debt <span class="text-accent">Analyzer</span></h1>
+        <p class="lead text-muted mx-auto" style="max-width: 650px; font-weight: 500;">
+            Quantify model entanglement and maintainability risks in your AI-enabled software architecture with precision.
         </p>
     </div>
 
@@ -25,23 +25,17 @@
         <div class="col-lg-10 mx-auto">
             <div class="glass-card overflow-hidden">
                 <div class="row g-0">
-                    <!-- Sidebar Navigation for Methods -->
-                    <div class="col-md-3 bg-surface p-4 border-end border-glass">
-                        <div class="nav flex-column nav-pills nav-pills-premium" id="uploadMethodTabs" role="tablist">
-                            <button class="nav-link active mb-2 text-start" id="local-tab" data-bs-toggle="pill" data-bs-target="#local" type="button">
-                                <i class="fas fa-folder-upload me-2"></i> Local Project
+                    <div class="col-md-3 secondary-glass p-0 border-end border-glass">
+                        <div class="nav flex-column nav-pills nav-pills-premium p-4" id="uploadMethodTabs" role="tablist">
+                            <button class="nav-link active mb-3 text-start d-flex align-items-center gap-2" id="local-tab" data-bs-toggle="pill" data-bs-target="#local" type="button">
+                                <i class="fas fa-folder-open"></i> Local Project
                             </button>
-                            <button class="nav-link mb-2 text-start" id="github-tab" data-bs-toggle="pill" data-bs-target="#github" type="button">
-                                <i class="fab fa-github me-2"></i> GitHub Repo
+                            <button class="nav-link mb-3 text-start d-flex align-items-center gap-2" id="github-tab" data-bs-toggle="pill" data-bs-target="#github" type="button">
+                                <i class="fab fa-github"></i> GitHub Repo
                             </button>
-                            <button class="nav-link mb-2 text-start" id="mlops-tab" data-bs-toggle="pill" data-bs-target="#mlops" type="button">
-                                <i class="fas fa-server me-2"></i> MLOps Platform
+                            <button class="nav-link mb-3 text-start d-flex align-items-center gap-2" id="mlops-tab" data-bs-toggle="pill" data-bs-target="#mlops" type="button">
+                                <i class="fas fa-server"></i> MLOps Platform
                             </button>
-                        </div>
-                        
-                        <div class="mt-5 p-3 rounded-3 bg-deep text-muted small">
-                            <i class="fas fa-shield-check me-2 text-secondary"></i>
-                            Your data is processed locally and never stored.
                         </div>
                     </div>
 
@@ -54,13 +48,12 @@
                                 <form id="localUploadForm" enctype="multipart/form-data">
                                     <input type="hidden" name="source_type" value="local">
                                     
-                                    <div class="upload-zone-premium mb-4" id="dropZone">
-                                        <div class="upload-icon-wrapper">
-                                            <i class="fas fa-arrow-up-from-bracket"></i>
+                                    <div class="upload-zone-premium mb-4" id="dropZone" style="cursor: pointer;">
+                                        <div class="upload-icon-wrapper mb-3">
+                                            <i class="fas fa-cloud-arrow-up text-accent fs-1"></i>
                                         </div>
-                                        <h5>Drop your project here</h5>
-                                        <p class="text-muted">Or click to browse your files (ZIP, TAR.GZ)</p>
-                                        <p class="small text-secondary">Maximum file size: 500MB</p>
+                                        <h5 class="text-bright fw-bold">Drop your project here</h5>
+                                        <p class="text-muted small">ZIP, TAR.GZ files supported (max 500MB)</p>
                                         
                                         <input type="file" name="project_files" id="fileInput" accept=".zip,.tar,.gz,.tgz" multiple style="display: none;">
                                         

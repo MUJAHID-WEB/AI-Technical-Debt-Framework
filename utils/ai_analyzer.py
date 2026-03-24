@@ -8,13 +8,13 @@ load_dotenv()
 class AIAnalyzer:
     """
     OpenRouter-powered AI Analyst for the 6-Tier Technical Debt Framework.
-    Uses nvidia/nemotron-3-super-120b-a12b:free with reasoning enabled.
+    Uses stepfun/step-3.5-flash:free with reasoning enabled.
     """
     
     def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.url = "https://openrouter.ai/api/v1/chat/completions"
-        self.model = "nvidia/nemotron-3-super-120b-a12b:free"
+        self.model = "stepfun/step-3.5-flash:free"
         
     def analyze_results(self, results):
         """

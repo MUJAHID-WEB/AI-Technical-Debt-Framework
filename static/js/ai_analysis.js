@@ -93,16 +93,16 @@ $(document).ready(function() {
                     </div>
                     <div class="p-4">
                         <div class="ai-field mb-3">
-                            <span class="ai-field-label">Root Cause:</span>
-                            <span class="ai-field-value">${finding.root_cause}</span>
+                            <div class="ai-field-label">Root Cause:</div>
+                            <div class="ai-field-value">${finding.root_cause}</div>
                         </div>
                         <div class="ai-field mb-3">
-                            <span class="ai-field-label">Architectural Impact:</span>
-                            <span class="ai-field-value">${finding.impact}</span>
+                            <div class="ai-field-label">Architectural Impact:</div>
+                            <div class="ai-field-value">${finding.impact}</div>
                         </div>
                         <div class="ai-field">
-                            <span class="ai-field-label">Strategic recommendation:</span>
-                            <span class="ai-field-value text-accent">${finding.recommendation}</span>
+                            <div class="ai-field-label">Strategic recommendation:</div>
+                            <div class="ai-field-value text-accent">${finding.recommendation}</div>
                         </div>
                     </div>
                 </div>`;

@@ -34,7 +34,30 @@ class AIAnalyzer:
         tier5 = results.get('tier5', {})
         tier6 = results.get('tier6', {})
         
+        # Extract detailed findings for better AI reasoning
+        direct_calls_detail = ""
+        if tier3.get('direct_model_calls', {}).get('details'):
+            direct_calls_detail = "\n        Direct Model Call Examples:"
+            for service_call in tier3['direct_model_calls']['details'][:3]:
+                for detail in service_call.get('details', [])[:2]:
+                    direct_calls_detail += f"\n        - {service_call['service']}: {detail['file']}:{detail['line']} -> `{detail['code']}`"
+
+        hidden_consumers_detail = ""
+        if tier3.get('hidden_consumers'):
+            hidden_consumers_detail = "\n        Hidden Model Consumers:"
+            for sc in tier3['hidden_consumers'][:5]:
+                hidden_consumers_detail += f"\n        - Model `{sc['model']}` used in `{sc['consumer']}` ({sc['file']}:{sc['line']})"
+
+        glue_code_detail = ""
+        if tier3.get('glue_code_details'):
+            # Get top 3 services by glue ratio
+            sorted_glue = sorted(tier3['glue_code_details'].items(), key=lambda x: x[1].get('ratio', 0), reverse=True)
+            glue_code_detail = "\n        High Glue Code Services:"
+            for name, data in sorted_glue[:3]:
+                glue_code_detail += f"\n        - {name}: {data.get('ratio', 0):.1%} glue code ({data.get('glue_lines', 0)} lines)"
+
         prompt = f"""Analyze the architectural health of this system and return a strictly structured JSON report.
+        Use the specific file names, code snippets, and metrics provided to explain the root cause and provide actionable recommendations.
         
         JSON SCHEMA:
         {{
@@ -42,9 +65,9 @@ class AIAnalyzer:
                 {{
                     "title": "Finding Title (Tier X)",
                     "priority": "Critical|High|Medium|Low",
-                    "root_cause": "Explanation",
+                    "root_cause": "Detailed explanation mentioning specific files/code if possible",
                     "impact": "System impact",
-                    "recommendation": "Mitigation steps"
+                    "recommendation": "Specific mitigation steps (e.g., 'Refactor X to use Y')"
                 }}
             ],
             "strategic_plan": {{
@@ -65,8 +88,9 @@ class AIAnalyzer:
         - Dependencies: {tier2.get('dependency_count', 0)}
 
         TIER 3 (AI SMELL DETECTION):
-        - Coupling: {tier3.get('direct_model_calls', {}).get('count', 0)} services
-        - Hidden Consumers: {len(tier3.get('hidden_consumers', []))}
+        - Coupling: {tier3.get('direct_model_calls', {}).get('count', 0)} services{direct_calls_detail}{hidden_consumers_detail}{glue_code_detail}
+        - Complex Pipelines: {tier3.get('pipeline_complexity', {}).get('complex_pipelines', 0)}
+        - Feedback Loops: {len(tier3.get('feedback_loops', []))} detected
 
         TIER 4 (MES SCORE):
         - SCORE: {tier4.get('mes_score', 0)}/10 ({tier4.get('mes_level', 'UNKNOWN')})

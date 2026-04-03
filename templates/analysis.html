@@ -20,8 +20,10 @@
                 Analysis <span class="text-accent ms-2">Engine Report</span>
             </h2>
             <div class="mt-2 text-muted small">
-                <span class="me-3"><i class="fas fa-fingerprint me-1"></i>ID: <code class="text-accent">{{ job_id[:12] }}</code></span>
-                <span><i class="fas fa-clock me-1"></i>Generated: {{ results.tier1.timestamp if results else 'Processing...' }}</span>
+                <span class="me-3"><i class="fas fa-fingerprint me-1"></i>ID: <code
+                        class="text-accent">{{ job_id[:12] }}</code></span>
+                <span><i class="fas fa-clock me-1"></i>Generated: {{ results.tier1.project_info.scan_time if results
+                    else 'Processing...' }}</span>
             </div>
         </div>
         <div>
@@ -45,8 +47,9 @@
             <div class="glass-card p-5">
                 <div class="text-center mb-5">
                     <div class="spinner-grow text-accent mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
-                    <h3 class="fw-bold text-bright">Heuristic Engine Active</h3>
-                    <p class="text-muted">Decompressing architecture and quantifying non-deterministic coupling...</p>
+                    <h3 class="fw-bold text-bright">AI-Enhanced Analysis Engine Active</h3>
+                    <p class="text-muted">Applying deep learning to detect architectural patterns and technical debt...
+                    </p>
                 </div>
 
                 <!-- Progress Section -->
@@ -55,23 +58,26 @@
                         <span class="text-muted small text-uppercase fw-bold">Scan Completion</span>
                         <span id="progressPercent" class="text-primary fw-bold">{{ job_info.progress }}%</span>
                     </div>
-                    <div class="progress" style="height: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                             id="progressBar" role="progressbar" 
-                             style="width: {{ job_info.progress }}%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); border: none;">
+                    <div class="progress"
+                        style="height: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar"
+                            role="progressbar"
+                            style="width: {{ job_info.progress }}%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); border: none;">
                         </div>
                     </div>
                     <div id="statusMessage" class="mt-3 text-center text-muted small">{{ job_info.message }}</div>
                 </div>
-                
+
                 <!-- Tier Grid -->
                 <div class="row g-3 mb-5">
                     {% for i in range(1, 7) %}
                     <div class="col-md-4 col-sm-6">
                         <div class="glass-card p-3 text-center border-glass transition-all" id="tier{{ i }}Card">
-                            <i class="fas {% if i==1 %}fa-layer-group{% elif i==2 %}fa-microscope{% elif i==3 %}fa-wind{% elif i==4 %}fa-calculator{% elif i==5 %}fa-wrench{% else %}fa-badge-check{% endif %} mb-2 text-secondary opacity-50 transition-all"></i>
+                            <i
+                                class="fas {% if i==1 %}fa-layer-group{% elif i==2 %}fa-microscope{% elif i==3 %}fa-wind{% elif i==4 %}fa-calculator{% elif i==5 %}fa-wrench{% else %}fa-badge-check{% endif %} mb-2 text-secondary opacity-50 transition-all"></i>
                             <h6 class="small fw-bold text-muted text-uppercase mb-2">Tier {{ i }}</h6>
-                            <span id="tier{{ i }}Status" class="badge bg-surface-light border border-glass text-muted py-1 px-3">Pending</span>
+                            <span id="tier{{ i }}Status"
+                                class="badge bg-surface-light border border-glass text-muted py-1 px-3">Pending</span>
                         </div>
                     </div>
                     {% endfor %}
@@ -80,11 +86,15 @@
                 <!-- Analysis Log -->
                 <div class="mt-4">
                     <div class="d-flex justify-content-between mb-2 px-1">
-                        <span class="text-muted small text-uppercase fw-bold"><i class="fas fa-terminal me-2"></i>Analysis Stream</span>
+                        <span class="text-muted small text-uppercase fw-bold"><i class="fas fa-brain me-2"></i>AI
+                            Analysis Stream</span>
                         <div class="scanning-line" style="width: 60px;"></div>
                     </div>
-                    <pre id="operationDetails" class="bg-deep text-secondary p-4 rounded-3 border border-glass" style="height: 200px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6;">
-Waiting for kernel initialization...
+                    <pre id="operationDetails" class="bg-deep text-secondary p-4 rounded-3 border border-glass"
+                        style="height: 200px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6;">
+[AI] Initializing neural analysis engine...
+[AI] Loading project structure into context...
+[AI] Starting Tier 1: Data Collection
                     </pre>
                 </div>
             </div>
@@ -92,22 +102,22 @@ Waiting for kernel initialization...
     </div>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             function updateStatus() {
-                $.get('/job-status/{{ job_id }}', function(data) {
-                    $('#progressBar').css('width', data.progress + '%').text(data.progress + '%');
+                $.get('/job-status/{{ job_id }}', function (data) {
+                    $('#progressBar').css('width', data.progress + '%');
+                    $('#progressPercent').text(data.progress + '%');
                     $('#statusMessage').text(data.message);
-                    
-                    // Update tier status
+
                     if (data.tier_status) {
                         for (let tier = 1; tier <= 6; tier++) {
                             let status = data.tier_status[tier] || 'pending';
                             let card = $(`#tier${tier}Card`);
                             let badge = $(`#tier${tier}Status`);
-                            
+
                             card.removeClass('border-secondary border-warning border-success');
                             badge.removeClass('bg-secondary bg-warning bg-success');
-                            
+
                             if (status === 'running') {
                                 card.addClass('border-warning');
                                 badge.addClass('bg-warning').text('Running');
@@ -120,196 +130,175 @@ Waiting for kernel initialization...
                             }
                         }
                     }
-                    
-                    // Show tier results as they come in
-                    if (data.tier_results) {
-                        let details = [];
-                        if (data.tier_results.tier1) {
-                            let t1 = data.tier_results.tier1;
-                            details.push(`📊 TIER 1: Found ${t1.services?.length || 0} services, ${t1.models?.length || 0} models`);
-                        }
-                        if (data.tier_results.tier2) {
-                            let t2 = data.tier_results.tier2;
-                            details.push(`🔍 TIER 2: Detected ${t2.endpoint_count || 0} API endpoints, ${t2.dependency_count || 0} dependencies`);
-                        }
-                        if (data.tier_results.tier3) {
-                            let t3 = data.tier_results.tier3;
-                            details.push(`👃 TIER 3: Direct calls: ${t3.direct_model_calls?.count || 0}, Glue: ${((t3.glue_code_ratio || 0) * 100).toFixed(1)}%`);
-                        }
-                        if (data.tier_results.tier4) {
-                            let t4 = data.tier_results.tier4;
-                            details.push(`📐 TIER 4: MES Score: ${t4.mes_score || 0}/10 (${t4.mes_level || 'Unknown'})`);
-                        }
-                        if (data.tier_results.tier5) {
-                            let t5 = data.tier_results.tier5;
-                            details.push(`🔧 TIER 5: Commits: ${t5.commit_count || 0}, Bug rate: ${((t5.bug_metrics?.bug_rate || 0) * 100).toFixed(1)}%`);
-                        }
-                        if (data.tier_results.tier6) {
-                            let t6 = data.tier_results.tier6;
-                            details.push(`✅ TIER 6: Hypothesis: ${t6.hypothesis_confirmed ? '✓ Confirmed' : '⚠ Not confirmed'}`);
-                        }
-                        
-                        if (details.length > 0) {
-                            $('#operationDetails').text(details.join('\n'));
-                        }
-                    }
-                    
-                    // If complete, reload to show results
+
                     if (data.status === 'complete') {
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1000);
+                        setTimeout(function () { window.location.reload(); }, 1000);
                     } else if (data.status === 'error') {
                         $('#operationDetails').text('Error: ' + (data.error || 'Unknown error'));
                         $('#progressBar').removeClass('progress-bar-animated').addClass('bg-danger');
                     } else {
                         setTimeout(updateStatus, 2000);
                     }
-                }).fail(function() {
-                    console.log('Status check failed');
-                });
+                }).fail(function () { console.log('Status check failed'); });
             }
-            
-            // Start polling
+
             setTimeout(updateStatus, 1000);
         });
     </script>
 
     {% elif results %}
-    <!-- High Impact Insights Row -->
+    <!-- MES Score Display -->
     <div class="row g-4 mb-4">
-        <!-- Main MES Score -->
         <div class="col-lg-8">
-            <div class="glass-card p-4 h-100 overflow-hidden position-relative">
-                <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="glass-card p-4 h-100">
+                <div class="row align-items-center">
                     <div class="col-md-4 text-center border-md-end border-glass">
-                        <div class="mb-2 text-muted small text-uppercase fw-bold">MES Score</div>
-                        <div class="display-1 fw-bold text-primary mb-0" style="line-height: 1;">{{ results.tier4.mes_score }}</div>
+                        <div class="mb-2 text-muted small text-uppercase fw-bold">Model Entanglement Score</div>
+                        <div class="display-1 fw-bold text-primary mb-0" style="line-height: 1;">{{
+                            results.tier4.mes_score }}</div>
                         <div class="h5 text-muted">/ 10.0</div>
+                        <span class="badge-mes bg-{{ results.tier4.mes_level|lower|replace(' ', '-') }} mt-2 py-2 px-4">
+                            {{ results.tier4.mes_level|upper }}
+                        </span>
                     </div>
                     <div class="col-md-8 ps-md-5">
-                        <div class="d-flex align-items-center mb-3">
-                            <span class="badge-mes bg-{{ results.tier4.mes_level|lower|replace(' ', '-') }} me-3 py-2 px-4">
-                                {{ results.tier4.mes_level|upper }} ENTANGLEMENT
-                            </span>
-                            <i class="fas {% if results.tier4.mes_score <= 3 %}fa-circle-check text-secondary{% elif results.tier4.mes_score <= 7 %}fa-triangle-exclamation text-warning{% else %}fa-circle-xmark text-danger{% endif %} fs-4"></i>
-                        </div>
                         <h5 class="text-bright fw-bold mb-3">Interpretation</h5>
-                        <p class="text-muted mb-0" style="font-size: 0.95rem; line-height: 1.6;">
-                            {{ results.tier4.interpretation }}
-                        </p>
+                        <p class="text-muted mb-0">{{ results.tier4.interpretation }}</p>
+                        {% if results.tier4.ai_enhancements %}
+                        <div class="mt-3 p-3 rounded-3 bg-deep border border-glass">
+                            <small class="text-accent fw-bold"><i class="fas fa-chart-line me-1"></i>AI
+                                Forecast:</small>
+                            <small class="text-muted ms-2">{{ results.tier4.ai_enhancements.get('predicted_increase', 0)
+                                }}% increase expected in 6 months</small>
+                        </div>
+                        {% endif %}
                     </div>
-                </div>
-                <!-- Background Decoration -->
-                <div style="position: absolute; right: -50px; bottom: -50px; opacity: 0.05; font-size: 15rem; transform: rotate(-15deg);">
-                    <i class="fas fa-brain"></i>
                 </div>
             </div>
         </div>
-        
-        <!-- Summary Stats -->
+
         <div class="col-lg-4">
-            <div class="glass-card p-4 h-100 bg-surface-light">
-                <div class="mb-4">
-                    <h6 class="text-muted small text-uppercase fw-bold mb-3">System Blueprint</h6>
-                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3 bg-deep border border-glass">
-                        <div class="text-start">
-                            <div class="text-muted small">Total Files</div>
-                            <div class="h4 mb-0 fw-bold">{{ results.tier1.statistics.total_files }}</div>
-                        </div>
-                        <i class="fas fa-file-code text-secondary"></i>
+            <div class="glass-card p-4 h-100">
+                <div class="text-center">
+                    <i class="fas fa-robot fa-2x text-accent mb-3"></i>
+                    <h5 class="text-bright fw-bold">AI-Powered Analysis</h5>
+                    <p class="text-muted small">Deep learning models have analyzed your architecture across 6 tiers</p>
+                    <button id="generateAIInsights" class="btn btn-premium w-100" data-job-id="{{ job_id }}">
+                        <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Strategic Insights
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Insights Section -->
+    <div class="row mb-5" id="aiInsightsRow">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="text-bright fw-bold mb-1"><i class="fas fa-microchip me-2 text-accent"></i>AI
+                            Strategic Insights</h4>
+                        <p class="text-muted small mb-0">Deep architectural reasoning powered by AI</p>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3 bg-deep border border-glass">
-                        <div class="text-start">
-                            <div class="text-muted small">Project Size</div>
-                            <div class="h4 mb-0 fw-bold">{{ results.tier1.statistics.total_size_hr }}</div>
+                </div>
+
+                <div id="aiLoading" class="text-center py-5 d-none">
+                    <div class="spinner-border text-accent mb-3" role="status"></div>
+                    <h5 class="text-bright mb-2">AI Analysis in Progress...</h5>
+                    <p class="text-muted small">Analyzing architecture patterns and generating recommendations</p>
+                </div>
+
+                <div id="aiResult" class="d-none">
+                    <div class="row g-4">
+                        <div class="col-md-7">
+                            <h6 class="text-muted small text-uppercase fw-bold mb-3 border-bottom border-glass pb-2">
+                                Strategic Report</h6>
+                            <div id="aiReportText" class="mb-4 rounded-3 border border-glass overflow-hidden"></div>
                         </div>
-                        <i class="fas fa-database text-accent"></i>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-deep border border-glass">
-                        <div class="text-start">
-                            <div class="text-muted small">Language</div>
-                            <div class="h4 mb-0 fw-bold">{{ results.tier1.project_info.primary_language or 'Py/JS' }}</div>
+                        <div class="col-md-5">
+                            <h6 class="text-muted small text-uppercase fw-bold mb-3 border-bottom border-glass pb-2">
+                                Cognitive Reasoning</h6>
+                            <div id="aiReasoningText"
+                                class="text-secondary small p-3 rounded-3 bg-deep border border-glass"
+                                style="max-height: 400px; overflow-y: auto; font-family: monospace; line-height: 1.6;">
+                            </div>
                         </div>
-                        <i class="fas fa-code text-primary"></i>
                     </div>
                 </div>
             </div>
+        </div>
     </div>
-    
-    <!-- AI Strategic Insights Row -->
-    <div class="row mb-5" id="aiInsightsRow">
+
+    <!-- AI Proposed Architecture Section -->
+    <div class="row mb-5">
         <div class="col-12">
-            <div class="glass-card p-4 border-accent border-2 bg-surface-light position-relative overflow-hidden">
-                <div class="d-flex justify-content-between align-items-center mb-4 position-relative" style="z-index: 2;">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h4 class="text-bright fw-bold mb-1"><i class="fas fa-microchip me-2 text-accent"></i>AI Strategic Insights</h4>
-                        <p class="text-muted small mb-0">Deep architectural reasoning powered by Arcee-AI Trinity</p>
+                        <h4 class="text-bright fw-bold mb-1"><i
+                                class="fas fa-draw-polygon me-2 text-accent"></i>AI-Proposed Architecture</h4>
+                        <p class="text-muted small mb-0">Intelligent redesign recommendations for optimal AI integration
+                        </p>
                     </div>
-                    <button id="generateAIInsights" class="btn btn-premium px-4" data-job-id="{{ job_id }}" {% if not results %}disabled{% endif %}>
-                        <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Insights
+                    <button id="generateArchitecture" class="btn btn-outline-premium" data-job-id="{{ job_id }}">
+                        <i class="fas fa-cogs me-2"></i>Generate Architecture
                     </button>
                 </div>
-                
-                <div id="aiLoading" class="text-center py-5 d-none">
+
+                <div id="archLoading" class="text-center py-5 d-none">
                     <div class="spinner-border text-accent mb-3" role="status"></div>
-                    <h5 class="text-bright mb-2">Neural Analysis in Progress...</h5>
-                    <p class="text-muted small">The model is performing multi-stage architectural reasoning.</p>
+                    <h5 class="text-bright mb-2">Designing Optimal Architecture...</h5>
+                    <p class="text-muted small">AI is analyzing best practices and generating component recommendations
+                    </p>
                 </div>
-                
-                <div id="aiResult" class="d-none position-relative" style="z-index: 2;">
-                    <div class="row g-4">
-                        <div class="col-md-7">
-                            <h6 class="text-muted small text-uppercase fw-bold mb-3 border-bottom border-glass pb-2">Final Strategic Report</h6>
-                            <div id="aiReportText" class="mb-4 rounded-3 border border-glass overflow-hidden" style="font-size: 0.95rem;"></div>
-                        </div>
-                        <div class="col-md-5">
-                            <h6 class="text-muted small text-uppercase fw-bold mb-3 border-bottom border-glass pb-2">Cognitive Reasoning Details</h6>
-                            <div id="aiReasoningText" class="text-secondary small p-3 rounded-3 bg-surface border border-glass" style="max-height: 400px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; line-height: 1.6;"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Background Decoration -->
-                <div style="position: absolute; right: -30px; top: -30px; opacity: 0.03; font-size: 10rem; transform: rotate(15deg);">
-                    <i class="fas fa-network-wired"></i>
+
+                <div id="architectureResult" class="d-none">
+                    <div id="architectureContent"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Tier Navigation -->
-    <div class="row mb-5">
+    <div class="row mb-4">
         <div class="col-12">
-            <ul class="nav nav-pills justify-content-center p-2 rounded-3 bg-surface border border-glass" id="tierTabs" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier1" type="button">
-                        <i class="fas fa-layer-group me-2"></i>Tier 1
+            <ul class="nav nav-pills justify-content-center p-2 rounded-3 bg-surface border border-glass" id="tierTabs"
+                role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier1" type="button"
+                        role="tab">
+                        <i class="fas fa-layer-group me-2"></i>Tier 1: Data Collection
                     </button>
                 </li>
-                <li class="nav-item">
-                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier2" type="button">
-                        <i class="fas fa-microscope me-2"></i>Tier 2
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier2" type="button"
+                        role="tab">
+                        <i class="fas fa-microscope me-2"></i>Tier 2: System Analysis
                     </button>
                 </li>
-                <li class="nav-item">
-                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier3" type="button">
-                        <i class="fas fa-wind me-2"></i>Tier 3
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier3" type="button"
+                        role="tab">
+                        <i class="fas fa-wind me-2"></i>Tier 3: AI Smells
                     </button>
                 </li>
-                <li class="nav-item">
-                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier4" type="button">
-                        <i class="fas fa-calculator me-2"></i>Tier 4
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier4" type="button"
+                        role="tab">
+                        <i class="fas fa-calculator me-2"></i>Tier 4: MES Metrics
                     </button>
                 </li>
-                <li class="nav-item">
-                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier5" type="button">
-                        <i class="fas fa-wrench me-2"></i>Tier 5
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier5" type="button"
+                        role="tab">
+                        <i class="fas fa-wrench me-2"></i>Tier 5: Maintainability
                     </button>
                 </li>
-                <li class="nav-item">
-                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier6" type="button">
-                        <i class="fas fa-badge-check me-2"></i>Tier 6
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-2 px-4" data-bs-toggle="tab" data-bs-target="#tier6" type="button"
+                        role="tab">
+                        <i class="fas fa-badge-check me-2"></i>Tier 6: Validation
                     </button>
                 </li>
             </ul>
@@ -318,31 +307,50 @@ Waiting for kernel initialization...
 
     <!-- Tab Content -->
     <div class="tab-content" id="tierTabContent">
-        <!-- TIER 1 -->
+
+        <!-- TIER 1: Data Collection -->
         <div class="tab-pane fade show active" id="tier1" role="tabpanel">
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="glass-card h-100">
                         <div class="p-4 border-bottom border-glass bg-surface-light">
-                            <h5 class="mb-0 text-bright fw-bold"><i class="fas fa-info-circle me-2 text-primary"></i>Project Intelligence</h5>
+                            <h5 class="mb-0 text-bright fw-bold"><i
+                                    class="fas fa-info-circle me-2 text-primary"></i>Project Intelligence</h5>
                         </div>
                         <div class="p-4">
-                            <table class="table table-borderless table-premium mb-0">
+                            {% set tier1 = results.tier1 %}
+                            <table class="table table-borderless mb-0">
                                 <tr>
                                     <td class="text-muted small text-uppercase">Project Name</td>
-                                    <td class="text-bright fw-bold text-end">{{ results.tier1.project_info.name }}</td>
+                                    <td class="text-bright fw-bold text-end">{{ tier1.project_info.name if
+                                        tier1.project_info else 'Unknown' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted small text-uppercase">Primary Stack</td>
-                                    <td class="text-bright text-end"><span class="badge bg-deep border border-glass">{{ results.tier1.project_info.primary_language or 'Detection Pending' }}</span></td>
+                                    <td class="text-muted small text-uppercase">Primary Language</td>
+                                    <td class="text-bright text-end">
+                                        <span class="badge bg-deep border border-glass">{{ tier1.project_info.language
+                                            or 'Unknown' }}</span>
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted small text-uppercase">Architecture</td>
-                                    <td class="text-bright text-end">{{ results.tier1.project_info.project_type or 'Monolith' }}</td>
+                                    <td class="text-muted small text-uppercase">Project Type</td>
+                                    <td class="text-bright text-end">{{ tier1.project_info.project_type or 'Unknown' }}
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted small text-uppercase">File Magnitude</td>
-                                    <td class="text-bright text-end">{{ results.tier1.statistics.total_files }} objects</td>
+                                    <td class="text-muted small text-uppercase">Total Files</td>
+                                    <td class="text-bright text-end">{{ tier1.statistics.total_files if tier1.statistics
+                                        else 0 }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small text-uppercase">Total Size</td>
+                                    <td class="text-bright text-end">{{ tier1.statistics.total_size_hr if
+                                        tier1.statistics else '0 B' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small text-uppercase">Scan Time</td>
+                                    <td class="text-bright text-end">{{ tier1.project_info.scan_time[:19] if
+                                        tier1.project_info else 'Unknown' }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -351,125 +359,175 @@ Waiting for kernel initialization...
                 <div class="col-md-6">
                     <div class="glass-card h-100">
                         <div class="p-4 border-bottom border-glass bg-surface-light">
-                            <h5 class="mb-0 text-bright fw-bold"><i class="fas fa-microchip me-2 text-accent"></i>Component Distribution</h5>
+                            <h5 class="mb-0 text-bright fw-bold"><i
+                                    class="fas fa-microchip me-2 text-accent"></i>Component Distribution</h5>
                         </div>
                         <div class="p-4">
                             <div class="row text-center g-3">
                                 <div class="col-4">
                                     <div class="p-3 rounded-3 bg-deep border border-glass">
-                                        <div class="h3 mb-1 fw-black text-secondary">{{ results.tier1.statistics.services_count or 0 }}</div>
+                                        <div class="h3 mb-1 fw-black text-secondary">{{ tier1.statistics.services_count
+                                            if tier1.statistics else 0 }}</div>
                                         <div class="text-muted tiny text-uppercase fw-bold">Services</div>
                                     </div>
                                 </div>
                                 <div class="col-4">
                                     <div class="p-3 rounded-3 bg-deep border border-glass">
-                                        <div class="h3 mb-1 fw-black text-accent">{{ results.tier1.statistics.models_count or 0 }}</div>
+                                        <div class="h3 mb-1 fw-black text-accent">{{ tier1.statistics.models_count if
+                                            tier1.statistics else 0 }}</div>
                                         <div class="text-muted tiny text-uppercase fw-bold">Models</div>
                                     </div>
                                 </div>
                                 <div class="col-4">
                                     <div class="p-3 rounded-3 bg-deep border border-glass">
-                                        <div class="h3 mb-1 fw-black text-primary">{{ results.tier1.statistics.pipelines_count or 0 }}</div>
+                                        <div class="h3 mb-1 fw-black text-primary">{{ tier1.statistics.pipelines_count
+                                            if tier1.statistics else 0 }}</div>
                                         <div class="text-muted tiny text-uppercase fw-bold">Pipelines</div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="mt-4">
-                                <h6 class="text-muted small text-uppercase fw-bold mb-3">Language Composition</h6>
-                                {% if results.tier1.languages %}
-                                    {% for lang, stats in (results.tier1.languages.items()|default([])) %}
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="text-secondary small">{{ lang }}</span>
-                                        <div class="progress flex-grow-1 mx-3" style="height: 4px; background: var(--bg-deep); border: 1px solid var(--border-muted);">
-                                            {% set count_val = stats if stats is number else (stats.count if stats is mapping else 0) %}
-                                            {% set total_files = results.tier1.statistics.total_files or 1 %}
-                                            {% set lang_percent = ([((count_val / total_files) * 100), 100]|min) %}
-                                            <div class="progress-bar bg-primary" style="width: {{ lang_percent|round }}%;"></div>
-                                        </div>
-                                        <span class="text-bright small fw-bold">{{ count_val }}</span>
+                                <h6 class="text-muted small text-uppercase fw-bold mb-3">Language Distribution</h6>
+                                {% if tier1.languages %}
+                                {% for lang, count in tier1.languages.items() %}
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-secondary small">{{ lang }}</span>
+                                    <div class="progress flex-grow-1 mx-3"
+                                        style="height: 4px; background: var(--bg-deep);">
+                                        {% set total = tier1.statistics.total_files if tier1.statistics else 1 %}
+                                        <div class="progress-bar bg-primary"
+                                            style="width: {{ (count / total * 100)|round }}%;"></div>
                                     </div>
-                                    {% endfor %}
+                                    <span class="text-bright small fw-bold">{{ count }}</span>
+                                </div>
+                                {% endfor %}
                                 {% else %}
-                                    <p class="text-center text-muted py-2 small">No telemetry captured</p>
+                                <p class="text-muted text-center">No language data available</p>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Models Section -->
+            {% if tier1.models %}
+            <div class="glass-card mt-4">
+                <div class="p-4 border-bottom border-glass bg-surface-light">
+                    <h5 class="mb-0 text-bright fw-bold"><i class="fas fa-brain me-2 text-accent"></i>Detected ML Models
+                    </h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-premium mb-0">
+                        <thead class="bg-deep">
+                            <tr>
+                                <th>Model Name</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Path</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in tier1.models[:10] %}
+                            <tr>
+                                <td class="text-bright">{{ model.name }}</td>
+                                <td><span class="badge bg-primary">{{ model.type }}</span></td>
+                                <td class="text-muted">{{ model.size_hr if model.size_hr else 'Unknown' }}</td>
+                                <td class="text-muted small">{{ model.path[:50] }}{% if model.path|length > 50 %}...{%
+                                    endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
-        <!-- TIER 2 -->
+        <!-- TIER 2: System Analysis -->
         <div class="tab-pane fade" id="tier2" role="tabpanel">
             <div class="row g-4">
                 <div class="col-md-7">
                     <div class="glass-card">
-                        <div class="p-4 border-bottom border-glass">
-                            <h5 class="mb-0 text-bright fw-bold">Active Services</h5>
+                        <div class="p-4 border-bottom border-glass bg-surface-light">
+                            <h5 class="mb-0 text-bright fw-bold"><i class="fas fa-server me-2 text-primary"></i>Detected
+                                Services</h5>
                         </div>
                         <div class="p-0" style="max-height: 450px; overflow-y: auto;">
-                            <div class="list-group list-group-flush list-group-premium">
-                                {% for service in results.tier2.services %}
-                                <div class="list-group-item p-4 bg-transparent border-glass">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="mb-0 text-secondary fw-bold">{{ service.name }}</h6>
-                                        <span class="badge bg-deep border border-glass text-muted">{{ service.language }}</span>
-                                    </div>
-                                    <div class="text-muted tiny mb-2"><i class="fas fa-link me-1"></i>{{ service.path }}</div>
-                                    <div class="d-flex gap-3">
-                                        <div class="small text-accent"><i class="fas fa-plug-circle-bolt me-1"></i>{{ service.endpoint_count or 0 }} Endpoints</div>
-                                        <div class="small text-primary"><i class="fas fa-cube me-1"></i>Port: {{ service.port or 'N/A' }}</div>
-                                    </div>
+                            {% set tier2 = results.tier2 %}
+                            {% if tier2.services %}
+                            {% for service in tier2.services %}
+                            <div class="p-4 border-bottom border-glass">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 text-bright fw-bold">{{ service.name }}</h6>
+                                    <span class="badge bg-deep border border-glass">{{ service.language }}</span>
                                 </div>
-                                {% else %}
-                                <div class="p-5 text-center text-muted">No services mapping available</div>
-                                {% endfor %}
+                                <div class="text-muted small mb-2"><i class="fas fa-folder me-1"></i>{{ service.path }}
+                                </div>
+                                <div class="d-flex gap-3">
+                                    <div class="small text-accent"><i class="fas fa-plug me-1"></i>{{
+                                        service.endpoint_count or 0 }} Endpoints</div>
+                                    <div class="small text-primary"><i class="fas fa-cube me-1"></i>{{
+                                        service.file_count or 0 }} Files</div>
+                                </div>
                             </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="p-5 text-center text-muted">No services detected</div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
                 <div class="col-md-5">
                     <div class="glass-card mb-4">
-                        <div class="p-4 border-bottom border-glass">
-                            <h5 class="mb-0 text-bright fw-bold">Dependency graph</h5>
+                        <div class="p-4 border-bottom border-glass bg-surface-light">
+                            <h5 class="mb-0 text-bright fw-bold"><i
+                                    class="fas fa-diagram-project me-2 text-accent"></i>Dependency Graph</h5>
                         </div>
                         <div class="p-4">
                             <div class="p-3 rounded-3 bg-deep border border-glass mb-4 text-center">
-                                <div class="h2 mb-0 fw-black text-primary">{{ results.tier2.dependency_count or 0 }}</div>
-                                <div class="text-muted tiny text-uppercase fw-bold">Total Connections</div>
+                                <div class="h2 mb-0 fw-black text-primary">{{ tier2.dependency_count or 0 }}</div>
+                                <div class="text-muted tiny text-uppercase fw-bold">Total Dependencies</div>
                             </div>
-                            <ul class="list-unstyled mb-0">
-                                {% if results.tier2.dependencies %}
-                                    {% for service, deps in results.tier2.dependencies.items() %}
-                                    <li class="mb-3">
-                                        <div class="d-flex justify-content-between align-items-center small mb-1">
-                                            <span class="text-secondary fw-bold">{{ service }}</span>
-                                            <span class="text-muted">{{ deps|length }} deps</span>
-                                        </div>
-                                        <div class="progress" style="height: 4px; background: var(--bg-deep); border: 1px solid var(--border-muted);">
-                                            <div class="progress-bar bg-primary" style="width: {{ [deps|length * 10, 100]|min }}%;"></div>
-                                        </div>
-                                    </li>
+
+                            <h6 class="text-muted small text-uppercase fw-bold mb-3">Service Dependencies</h6>
+                            {% if tier2.dependencies %}
+                            {% for service, deps in tier2.dependencies.items() %}
+                            {% if deps %}
+                            <div class="mb-3">
+                                <div class="small text-secondary fw-bold mb-1">{{ service }} →</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for dep in deps[:5] %}
+                                    <span class="badge bg-surface-light border border-glass">{{ dep }}</span>
                                     {% endfor %}
-                                {% endif %}
-                            </ul>
+                                    {% if deps|length > 5 %}
+                                    <span class="badge bg-secondary">+{{ deps|length - 5 }} more</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                            {% else %}
+                            <p class="text-muted text-center">No dependencies detected</p>
+                            {% endif %}
                         </div>
                     </div>
-                    
+
                     <div class="glass-card">
-                        <div class="p-4 border-bottom border-glass">
-                            <h5 class="mb-0 text-bright fw-bold">Framework ecosystem</h5>
+                        <div class="p-4 border-bottom border-glass bg-surface-light">
+                            <h5 class="mb-0 text-bright fw-bold"><i
+                                    class="fas fa-cubes me-2 text-primary"></i>Frameworks</h5>
                         </div>
                         <div class="p-4">
                             <div class="d-flex flex-wrap gap-2">
-                            {% if results.tier2.frameworks %}
-                                {% for framework in results.tier2.frameworks %}
-                                    <span class="badge-mes bg-surface-light border border-glass text-secondary small">{{ framework }}</span>
+                                {% if tier2.frameworks %}
+                                {% for framework in tier2.frameworks %}
+                                <span class="badge bg-primary py-2 px-3">{{ framework }}</span>
                                 {% endfor %}
-                            {% else %}
-                                <span class="text-muted small">Generic implementation</span>
-                            {% endif %}
+                                {% else %}
+                                <span class="text-muted">No frameworks detected</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -477,232 +535,337 @@ Waiting for kernel initialization...
             </div>
         </div>
 
-        <!-- TIER 3 -->
+        <!-- TIER 3: AI Smell Detection -->
         <div class="tab-pane fade" id="tier3" role="tabpanel">
             <div class="row g-4">
                 <div class="col-md-4">
-                    <div class="glass-card p-4 text-center border-top border-accent border-4">
-                        <div class="text-muted tiny text-uppercase fw-bold mb-3">Model Leakage</div>
-                        <div class="h1 fw-black text-bright mb-1">{{ results.tier3.direct_model_calls.count or 0 }}</div>
-                        <p class="text-muted small">Direct service-to-model calls detected</p>
-                        <div class="badge-mes bg-deep border border-glass text-accent w-100 py-2">
-                            {{ (results.tier3.direct_model_calls.ratio * 100)|round(1) if results.tier3.direct_model_calls.ratio else 0 }}% Violation Rate
+                    <div class="glass-card p-4 text-center border-top border-danger border-4">
+                        <div class="text-muted tiny text-uppercase fw-bold mb-3">Direct Model Calls</div>
+                        {% set tier3 = results.tier3 %}
+                        <div class="h1 fw-black text-bright mb-1">{{ tier3.direct_model_calls.count if
+                            tier3.direct_model_calls else 0 }}</div>
+                        <p class="text-muted small">Services directly calling ML models</p>
+                        <div class="badge bg-deep border border-glass text-accent w-100 py-2">
+                            {{ (tier3.direct_model_calls.ratio * 100)|round(1) if tier3.direct_model_calls.ratio else 0
+                            }}% of services
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="glass-card p-4 text-center border-top border-primary border-4">
-                        <div class="text-muted tiny text-uppercase fw-bold mb-3">Boilerplate Pressure</div>
-                        <div class="h1 fw-black text-bright mb-1">{{ (results.tier3.glue_code_ratio * 100)|round(1) if results.tier3.glue_code_ratio else 0 }}%</div>
-                        <p class="text-muted small">Infrastructure "Glue Code" overhead</p>
-                        <div class="badge-mes bg-deep border border-glass text-primary w-100 py-2">
-                            {{ 'EXCESSIVE' if results.tier3.glue_code_ratio > 0.4 else 'MANAGED' }}
+                    <div class="glass-card p-4 text-center border-top border-warning border-4">
+                        <div class="text-muted tiny text-uppercase fw-bold mb-3">Glue Code Ratio</div>
+                        <div class="h1 fw-black text-bright mb-1">{{ (tier3.glue_code_ratio * 100)|round(1) if
+                            tier3.glue_code_ratio else 0 }}%</div>
+                        <p class="text-muted small">Data transformation overhead</p>
+                        <div class="badge bg-deep border border-glass text-warning w-100 py-2">
+                            {% if tier3.glue_code_ratio > 0.3 %}EXCESSIVE{% elif tier3.glue_code_ratio > 0.15
+                            %}MODERATE{% else %}MANAGED{% endif %}
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="glass-card p-4 text-center border-top border-secondary border-4">
+                    <div class="glass-card p-4 text-center border-top border-info border-4">
                         <div class="text-muted tiny text-uppercase fw-bold mb-3">Hidden Consumers</div>
-                        <div class="h1 fw-black text-bright mb-1">{{ results.tier3.hidden_consumers|length }}</div>
-                        <p class="text-muted small">Undocumented data dependencies</p>
-                        <div class="badge-mes bg-deep border border-glass text-secondary w-100 py-2">
-                            {{ 'ANONYMOUS FLOWS' }}
+                        <div class="h1 fw-black text-bright mb-1">{{ tier3.hidden_consumers|length if
+                            tier3.hidden_consumers else 0 }}</div>
+                        <p class="text-muted small">Undocumented model consumers</p>
+                        <div class="badge bg-deep border border-glass text-info w-100 py-2">
+                            {{ 'CRITICAL' if tier3.hidden_consumers|length > 5 else 'WARNING' if
+                            tier3.hidden_consumers|length > 0 else 'CLEAR' }}
                         </div>
                     </div>
                 </div>
-                <!-- Additional Tier 3 Insights -->
+            </div>
+
+            <div class="row g-4 mt-2">
                 <div class="col-md-6">
-                    <div class="glass-card p-4">
-                        <h6 class="text-bright fw-bold mb-3"><i class="fas fa-diagram-project me-2 text-primary"></i>Pipeline Complexity</h6>
-                        <div class="d-flex align-items-center">
-                            <div class="h3 fw-black text-accent mb-0 me-4">{{ results.tier3.pipeline_complexity.complex_pipelines or 0 }}</div>
-                            <div class="text-muted small">Pipelines exceeding threshold complexity (non-linear branching)</div>
+                    <div class="glass-card">
+                        <div class="p-4 border-bottom border-glass bg-surface-light">
+                            <h5 class="mb-0 text-bright fw-bold"><i
+                                    class="fas fa-code-branch me-2 text-accent"></i>Pipeline Complexity</h5>
+                        </div>
+                        <div class="p-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="h2 fw-black text-primary mb-0">{{
+                                        tier3.pipeline_complexity.complex_pipelines if tier3.pipeline_complexity else 0
+                                        }}</div>
+                                    <div class="text-muted small">Complex Pipelines</div>
+                                </div>
+                                <div>
+                                    <div class="h2 fw-black text-secondary mb-0">{{
+                                        tier3.pipeline_complexity.pipelines|length if tier3.pipeline_complexity else 0
+                                        }}</div>
+                                    <div class="text-muted small">Total Pipelines</div>
+                                </div>
+                            </div>
+                            {% if tier3.pipeline_complexity.details %}
+                            <div class="mt-3">
+                                <h6 class="text-muted small text-uppercase fw-bold">Complex Pipelines</h6>
+                                {% for pipeline in tier3.pipeline_complexity.details[:3] %}
+                                <div
+                                    class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-2 bg-deep">
+                                    <span class="text-secondary small">{{ pipeline.name }}</span>
+                                    <span class="badge bg-warning">Complexity: {{ pipeline.complexity }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="glass-card p-4">
-                        <h6 class="text-bright fw-bold mb-3"><i class="fas fa-repeat me-2 text-secondary"></i>Drift Telemetry</h6>
-                        <div class="d-flex align-items-center">
-                            <div class="h3 fw-black text-primary mb-0 me-4">{{ results.tier3.retrain_frequency or 0 }}</div>
-                            <div class="text-muted small">Average retraining events per cycle detected in automation logs</div>
+                    <div class="glass-card">
+                        <div class="p-4 border-bottom border-glass bg-surface-light">
+                            <h5 class="mb-0 text-bright fw-bold"><i class="fas fa-repeat me-2 text-primary"></i>Feedback
+                                Loops</h5>
+                        </div>
+                        <div class="p-4">
+                            <div class="h2 fw-black text-accent mb-0">{{ tier3.feedback_loops|length if
+                                tier3.feedback_loops else 0 }}</div>
+                            <div class="text-muted small mb-3">Potential feedback loops detected</div>
+                            {% if tier3.feedback_loops %}
+                            {% for feedback_loop in tier3.feedback_loops[:3] %}
+                            <div class="small text-muted mb-1">
+                                <i class="fas fa-sync me-1 text-warning"></i>
+                                {{ feedback_loop.service }} - {{ feedback_loop.type }}
+                            </div>
+                            {% endfor %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TIER 4 -->
+        <!-- TIER 4: MES Metrics -->
         <div class="tab-pane fade" id="tier4" role="tabpanel">
-            <div class="glass-card overflow-hidden">
-                <div class="p-4 border-bottom border-glass bg-surface-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-bright fw-bold">MES Vector Analysis</h5>
-                    <span class="badge-mes bg-{{ results.tier4.mes_level|lower|replace(' ', '-') }}">Final Score: {{ results.tier4.mes_score }}</span>
+            <div class="glass-card">
+                <div
+                    class="p-4 border-bottom border-glass bg-surface-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-bright fw-bold"><i class="fas fa-chart-line me-2 text-accent"></i>MES Component
+                        Breakdown</h5>
+                    <span class="badge bg-primary py-2 px-3">Score: {{ results.tier4.mes_score }}/10</span>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-premium mb-0">
-                        <thead>
-                            <tr class="bg-deep text-muted tiny text-uppercase">
-                                <th class="ps-4">Dimension</th>
-                                <th class="text-center">Raw Value</th>
-                                <th class="text-center">Normalization</th>
-                                <th class="text-center">Weighting</th>
-                                <th class="pe-4 text-end">Contribution</th>
+                        <thead class="bg-deep">
+                            <tr>
+                                <th>Component</th>
+                                <th>Raw Value</th>
+                                <th>Normalized</th>
+                                <th>Weight</th>
+                                <th>Contribution</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% if results.tier4.components %}
-                                {% for comp, value in results.tier4.components.items() %}
-                                {% set weight = results.tier4.weights.get(comp, 0) %}
-                                <tr>
-                                    <td class="ps-4 text-bright fw-bold py-3">{{ comp|replace('_', ' ')|title }}</td>
-                                    <td class="text-center text-muted">{{ (value * 1.5)|round(2) }}</td>
-                                    <td class="text-center"><span class="text-primary">{{ (value * 100)|round(1) if value else 0 }}%</span></td>
-                                    <td class="text-center text-muted">{{ (weight * 100)|round(1) if weight else 0 }}%</td>
-                                    <td class="pe-4 text-end fw-bold text-bright">{{ ((value or 0) * (weight or 0) * 10)|round(2) }}</td>
-                                </tr>
-                                {% endfor %}
+                            {% for comp, value in results.tier4.components.items() %}
+                            <tr>
+                                <td class="text-bright fw-bold">{{ comp|replace('_', ' ')|title }}</td>
+                                <td class="text-muted">{{ (value * 1.5)|round(2) }}</td>
+                                <td>
+                                    <div class="progress" style="height: 6px; width: 100px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ value * 100 }}%;"></div>
+                                    </div>
+                                </td>
+                                <td class="text-muted">{{ (results.tier4.weights.get(comp, 0) * 100)|round(0) }}%</td>
+                                <td class="text-accent fw-bold">{{ (results.tier4.contributions.get(comp, 0) *
+                                    10)|round(2) }}</td>
+                            </tr>
+                            {% endfor %}
                             {% endif %}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <div class="glass-card mt-4">
+                <div class="p-4 border-bottom border-glass bg-surface-light">
+                    <h5 class="mb-0 text-bright fw-bold"><i
+                            class="fas fa-exclamation-triangle me-2 text-warning"></i>Risk Factors</h5>
+                </div>
+                <div class="p-4">
+                    {% if results.tier4.risk_factors %}
+                    {% for risk in results.tier4.risk_factors %}
+                    <div
+                        class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3 bg-deep border border-glass">
+                        <div>
+                            <div class="text-bright fw-bold">{{ risk.component|replace('_', ' ')|title }}</div>
+                            <div class="text-muted small">{{ risk.description }}</div>
+                        </div>
+                        <span
+                            class="badge bg-{{ 'danger' if risk.severity == 'HIGH' else 'warning' if risk.severity == 'MEDIUM' else 'info' }} px-3 py-2">
+                            {{ risk.severity }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted text-center">No significant risk factors identified</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-        <!-- TIER 5 -->
+        <!-- TIER 5: Maintainability -->
         <div class="tab-pane fade" id="tier5" role="tabpanel">
             <div class="row g-4">
                 <div class="col-md-4">
                     <div class="glass-card p-4 h-100">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-3"><i class="fas fa-code-commit me-2 text-primary"></i>Velocity & Churn</h6>
-                        <div class="h2 fw-black text-bright mb-1">{{ results.tier5.commit_count or 0 }}</div>
-                        <p class="text-muted small mb-4">Total historical lifecycle events recorded</p>
-                        
-                        <h6 class="text-muted tiny text-uppercase fw-bold mt-4 mb-2">High-Churn Artefacts</h6>
-                        {% if results.tier5.top_changed %}
-                            {% for item in results.tier5.top_changed[:4] %}
-                                <div class="d-flex justify-content-between align-items-center tiny mb-2 p-2 rounded-2 bg-deep">
-                                    <span class="text-secondary text-truncate me-2" style="max-width: 150px;">{{ item[0] }}</span>
-                                    <span class="badge bg-surface-light border border-glass">{{ item[1] }}</span>
-                                </div>
-                            {% endfor %}
+                        <h6 class="text-muted small text-uppercase fw-bold mb-3"><i
+                                class="fas fa-code-commit me-2 text-primary"></i>Code Churn</h6>
+                        {% set tier5 = results.tier5 %}
+                        <div class="h2 fw-black text-bright mb-1">{{ tier5.commit_count or 0 }}</div>
+                        <p class="text-muted small mb-3">Total commits</p>
+
+                        <div class="h2 fw-black text-bright mb-1">{{ tier5.contributors|length if tier5.contributors
+                            else 0 }}</div>
+                        <p class="text-muted small">Contributors</p>
+
+                        <h6 class="text-muted tiny text-uppercase fw-bold mt-4 mb-2">Top Changed Files</h6>
+                        {% if tier5.top_changed %}
+                        {% for file, count in tier5.top_changed[:3] %}
+                        <div class="d-flex justify-content-between align-items-center tiny mb-2 p-2 rounded-2 bg-deep">
+                            <span class="text-secondary text-truncate me-2" style="max-width: 150px;">{{
+                                file.split('/')[-1] }}</span>
+                            <span class="badge bg-primary">{{ count }} changes</span>
+                        </div>
+                        {% endfor %}
                         {% endif %}
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="glass-card p-4 h-100">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-3"><i class="fas fa-burst me-2 text-accent"></i>Change Impact</h6>
-                        <div class="h2 fw-black text-bright mb-1">{{ results.tier5.impact_metrics.avg_impact|round(1) if results.tier5.impact_metrics else 0 }}</div>
-                        <p class="text-muted small mb-4">Mean files affected per non-deterministic change</p>
-                        
+                        <h6 class="text-muted small text-uppercase fw-bold mb-3"><i
+                                class="fas fa-burst me-2 text-accent"></i>Change Impact</h6>
+                        <div class="h2 fw-black text-bright mb-1">{{ tier5.impact_metrics.avg_impact|round(1) if
+                            tier5.impact_metrics else 0 }}</div>
+                        <p class="text-muted small mb-3">Avg files affected per change</p>
+
+                        <div class="h2 fw-black text-bright mb-1">{{ tier5.impact_metrics.max_impact or 0 }}</div>
+                        <p class="text-muted small">Max impact radius</p>
+
                         <h6 class="text-muted tiny text-uppercase fw-bold mt-4 mb-2">Impact Hotspots</h6>
-                        {% if results.tier5.impact_metrics and results.tier5.impact_metrics.impact_by_model %}
-                            {% for model, impact in (results.tier5.impact_metrics.impact_by_model|dictsort(true, 'value'))[:4] %}
-                                <div class="d-flex justify-content-between align-items-center tiny mb-2 p-2 rounded-2 bg-deep border border-muted">
-                                    <span class="text-secondary text-truncate me-2" style="max-width: 150px;">{{ model }}</span>
-                                    <span class="text-primary fw-bold">{{ impact }} files</span>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted tiny">No impact data available</p>
+                        {% if tier5.impact_metrics and tier5.impact_metrics.impact_by_model %}
+                        {% for model, impact in (tier5.impact_metrics.impact_by_model.items()|list)[:3] %}
+                        <div class="d-flex justify-content-between align-items-center tiny mb-2 p-2 rounded-2 bg-deep">
+                            <span class="text-secondary text-truncate me-2">{{ model[:30] }}</span>
+                            <span class="text-accent fw-bold">{{ impact }} files</span>
+                        </div>
+                        {% endfor %}
                         {% endif %}
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="glass-card p-4 h-100">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-3"><i class="fas fa-bug me-2 text-primary"></i>Failure Propensity</h6>
-                        <div class="h2 fw-black text-bright mb-1">{{ (results.tier5.bug_metrics.bug_rate * 100)|round(1) if results.tier5.bug_metrics and results.tier5.bug_metrics.bug_rate else 0 }}%</div>
-                        <p class="text-muted small mb-4">Ratio of fix-oriented tasks to functional progress</p>
-                        
-                        <h6 class="text-muted tiny text-uppercase fw-bold mt-4 mb-2">Prone Modules</h6>
-                        {% if results.tier5.bug_metrics and results.tier5.bug_metrics.bugs_by_model %}
-                            {% for model, bugs in (results.tier5.bug_metrics.bugs_by_model|dictsort(true, 'value'))[:4] %}
-                                <div class="d-flex justify-content-between align-items-center tiny mb-2 p-2 rounded-2 bg-deep border border-muted">
-                                    <span class="text-secondary text-truncate me-2" style="max-width: 150px;">{{ model }}</span>
-                                    <span class="badge bg-primary-subtle text-primary">{{ bugs }} bugs</span>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted tiny">No bug telemetry available</p>
-                        {% endif %}
+                        <h6 class="text-muted small text-uppercase fw-bold mb-3"><i
+                                class="fas fa-bug me-2 text-danger"></i>Bug Metrics</h6>
+                        <div class="h2 fw-black text-bright mb-1">{{ (tier5.bug_metrics.bug_rate * 100)|round(1) if
+                            tier5.bug_metrics else 0 }}%</div>
+                        <p class="text-muted small mb-3">Bug rate</p>
+
+                        <div class="h2 fw-black text-bright mb-1">{{ tier5.bug_metrics.bug_count or 0 }}</div>
+                        <p class="text-muted small">Total bugs</p>
+
+                        <div class="mt-3 p-3 rounded-3 bg-deep border border-glass text-center">
+                            <div class="h4 mb-0 fw-bold text-accent">{{ tier5.maintainability_score or 0 }}/10</div>
+                            <div class="text-muted tiny text-uppercase fw-bold">Maintainability Score</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TIER 6 -->
+        <!-- TIER 6: Validation -->
         <div class="tab-pane fade" id="tier6" role="tabpanel">
             <div class="row g-4">
                 <div class="col-md-6">
-                    <div class="glass-card h-100 border-top border-{{ 'secondary' if results.tier6.hypothesis_confirmed else 'accent' }} border-4">
-                        <div class="p-4 border-bottom border-glass">
-                            <h5 class="mb-0 text-bright fw-bold">Hypothesis Validation</h5>
+                    <div class="glass-card h-100">
+                        <div class="p-4 border-bottom border-glass bg-surface-light">
+                            <h5 class="mb-0 text-bright fw-bold"><i class="fas fa-flask me-2 text-accent"></i>Hypothesis
+                                Validation</h5>
                         </div>
                         <div class="p-4">
+                            {% set tier6 = results.tier6 %}
                             <div class="d-flex align-items-baseline mb-4">
-                                <div class="h3 mb-0 fw-black text-bright me-3">{{ results.tier6.degradation_ratio|round(2) if results.tier6.degradation_ratio else 0 }}</div>
+                                <div class="h1 mb-0 fw-black text-bright me-3">{{ tier6.degradation_ratio|round(2) if
+                                    tier6.degradation_ratio else 0 }}</div>
                                 <div class="text-muted small text-uppercase fw-bold">Degradation Ratio</div>
                             </div>
-                            
-                            <p class="text-muted small mb-4" style="line-height: 1.6;">{{ results.tier6.interpretation }}</p>
-                            
-                            <div class="p-3 rounded-3 bg-deep border border-glass mb-4">
-                                <div class="row g-0 text-center">
-                                    <div class="col-6 border-end border-glass">
-                                        <div class="h4 mb-0 text-secondary">{{ results.tier6.avg_isolated_mes|round(1) if results.tier6.avg_isolated_mes else 0 }}</div>
-                                        <div class="tiny text-muted fw-bold">Isolated MES</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="h4 mb-0 text-accent">{{ results.tier6.avg_non_isolated_mes|round(1) if results.tier6.avg_non_isolated_mes else 0 }}</div>
-                                        <div class="tiny text-muted fw-bold">Coupled MES</div>
+
+                            <div
+                                class="alert alert-{{ 'success' if tier6.hypothesis_confirmed else 'warning' }} bg-deep border border-{{ 'success' if tier6.hypothesis_confirmed else 'warning' }} mb-4">
+                                <i
+                                    class="fas fa-{{ 'check-circle' if tier6.hypothesis_confirmed else 'exclamation-triangle' }} me-2"></i>
+                                Hypothesis: <strong>{{ 'CONFIRMED' if tier6.hypothesis_confirmed else 'NOT CONFIRMED'
+                                    }}</strong>
+                            </div>
+
+                            <div class="row g-3 text-center">
+                                <div class="col-6">
+                                    <div class="p-3 rounded-3 bg-deep border border-glass">
+                                        <div class="h3 mb-0 text-secondary">{{ tier6.avg_isolated_mes|round(1) if
+                                            tier6.avg_isolated_mes else 0 }}</div>
+                                        <div class="tiny text-muted">Isolated MES</div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="badge-mes bg-{{ 'secondary' if results.tier6.hypothesis_confirmed else 'deep' }} border border-glass w-100 py-3 text-center transition-all">
-                                <i class="fas fa-{{ 'circle-check' if results.tier6.hypothesis_confirmed else 'triangle-exclamation text-accent' }} me-2"></i>
-                                {% if results.tier6.hypothesis_confirmed %}Empirical Hypothesis Confirmed{% else %}Hypothesis Significance Under Alpha{% endif %}
+                                <div class="col-6">
+                                    <div class="p-3 rounded-3 bg-deep border border-glass">
+                                        <div class="h3 mb-0 text-accent">{{ tier6.avg_non_isolated_mes|round(1) if
+                                            tier6.avg_non_isolated_mes else 0 }}</div>
+                                        <div class="tiny text-muted">Coupled MES</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="glass-card h-100">
-                        <div class="p-4 border-bottom border-glass">
-                            <h5 class="mb-0 text-bright fw-bold">Cross-Vector Correlations</h5>
+                        <div class="p-4 border-bottom border-glass bg-surface-light">
+                            <h5 class="mb-0 text-bright fw-bold"><i
+                                    class="fas fa-chart-line me-2 text-primary"></i>Correlations</h5>
                         </div>
                         <div class="p-4">
-                            <div class="mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-1 small">
-                                    <span class="text-muted">MES vs High Churn</span>
-                                    <span class="text-primary fw-bold">{{ results.tier6.correlations.mes_churn|round(2) if results.tier6.correlations and results.tier6.correlations.mes_churn else 0 }}</span>
+                            {% if tier6.correlations %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted small">MES vs Code Churn</span>
+                                    <span class="text-primary fw-bold">{{ tier6.correlations.mes_churn|round(2)
+                                        }}</span>
                                 </div>
-                                <div class="progress" style="height: 4px; background: var(--bg-deep); border: 1px solid var(--border-muted);">
-                                    <div class="progress-bar bg-primary" style="width: {{ [(results.tier6.correlations.mes_churn * 100)|abs, 100]|min if results.tier6.correlations and results.tier6.correlations.mes_churn else 0 }}%;"></div>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-1 small">
-                                    <span class="text-muted">MES vs Bug Rate</span>
-                                    <span class="text-accent fw-bold">{{ results.tier6.correlations.mes_bug|round(2) if results.tier6.correlations and results.tier6.correlations.mes_bug else 0 }}</span>
-                                </div>
-                                <div class="progress" style="height: 4px; background: var(--bg-deep); border: 1px solid var(--border-muted);">
-                                    <div class="progress-bar bg-primary" style="width: {{ [(results.tier6.correlations.mes_bug * 100)|abs, 100]|min if results.tier6.correlations and results.tier6.correlations.mes_bug else 0 }}%;"></div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-primary"
+                                        style="width: {{ (tier6.correlations.mes_churn|abs * 100)|round }}%;"></div>
                                 </div>
                             </div>
-                            <div class="mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-1 small">
-                                    <span class="text-muted">MES vs Change Impact</span>
-                                    <span class="text-secondary fw-bold">{{ results.tier6.correlations.mes_impact|round(2) if results.tier6.correlations and results.tier6.correlations.mes_impact else 0 }}</span>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted small">MES vs Bug Rate</span>
+                                    <span class="text-accent fw-bold">{{ tier6.correlations.mes_bug|round(2) }}</span>
                                 </div>
-                                <div class="progress" style="height: 4px; background: var(--bg-deep); border: 1px solid var(--border-muted);">
-                                    <div class="progress-bar bg-primary" style="width: {{ [(results.tier6.correlations.mes_impact * 100)|abs, 100]|min if results.tier6.correlations and results.tier6.correlations.mes_impact else 0 }}%;"></div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-accent"
+                                        style="width: {{ (tier6.correlations.mes_bug|abs * 100)|round }}%;"></div>
                                 </div>
                             </div>
-                            <p class="text-muted small mt-4 p-3 bg-deep rounded-3 border border-glass" style="font-style: italic;">
-                                <i class="fas fa-quote-left me-2 opacity-50"></i>
-                                {{ results.tier6.correlation_interpretation or 'Coefficient data implies high stability in non-deterministic subsystems.' }}
-                            </p>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted small">MES vs Change Impact</span>
+                                    <span class="text-secondary fw-bold">{{ tier6.correlations.mes_impact|round(2)
+                                        }}</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-secondary"
+                                        style="width: {{ (tier6.correlations.mes_impact|abs * 100)|round }}%;"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="mt-4 p-3 rounded-3 bg-deep border border-glass">
+                                <small class="text-muted">{{ tier6.interpretation|truncate(200) if tier6.interpretation
+                                    else 'No interpretation available' }}</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -712,52 +875,254 @@ Waiting for kernel initialization...
 
     <!-- Recommendations Section -->
     <div class="row mt-5">
-        <div class="col-lg-10 mx-auto">
+        <div class="col-12">
             <div class="glass-card overflow-hidden">
-                <div class="p-4 border-bottom border-glass bg-surface-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-bright fw-bold"><i class="fas fa-screwdriver-wrench me-2 text-primary"></i>Strategic Roadmap</h5>
+                <div
+                    class="p-4 border-bottom border-glass bg-surface-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-bright fw-bold"><i
+                            class="fas fa-screwdriver-wrench me-2 text-primary"></i>AI-Powered Recommendations</h5>
                     <span class="badge bg-primary tiny px-3">{{ results.recommendations|length }} Insight(s)</span>
                 </div>
                 <div class="p-4">
                     {% if results.recommendations %}
-                        {% for rec in results.recommendations %}
-                        <div class="glass-card mb-4 p-4 border-start border-{{ 'primary' if rec.priority == 'CRITICAL' else 'accent' if rec.priority == 'HIGH' else 'secondary' }} border-4 bg-deep">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <div class="badge-mes bg-{{ 'primary' if rec.priority == 'CRITICAL' else 'accent' if rec.priority == 'HIGH' else 'deep' }} text-white mb-2 small">
-                                        {{ rec.priority }} PRIORITY
-                                    </div>
-                                    <h5 class="text-bright fw-bold mb-1">{{ rec.title }}</h5>
+                    {% for rec in results.recommendations %}
+                    <div
+                        class="glass-card mb-4 p-4 border-start border-{{ 'danger' if rec.priority == 'CRITICAL' else 'warning' if rec.priority == 'HIGH' else 'primary' if rec.priority == 'MEDIUM' else 'secondary' }} border-4 bg-deep">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <div
+                                    class="badge bg-{{ 'danger' if rec.priority == 'CRITICAL' else 'warning' if rec.priority == 'HIGH' else 'primary' if rec.priority == 'MEDIUM' else 'secondary' }} text-white mb-2 small">
+                                    {{ rec.priority }} PRIORITY
                                 </div>
-                                <div class="text-end">
-                                    <div class="text-muted tiny text-uppercase fw-bold">Effort / Impact</div>
-                                    <div class="text-secondary small fw-bold">{{ rec.effort }} / {{ rec.impact }}</div>
-                                </div>
+                                <h5 class="text-bright fw-bold mb-1">{{ rec.title }}</h5>
                             </div>
-                            <p class="text-muted mb-0 small" style="line-height: 1.6;">{{ rec.description }}</p>
+                            <div class="text-end">
+                                <div class="text-muted tiny text-uppercase fw-bold">Effort / Impact</div>
+                                <div class="text-secondary small fw-bold">{{ rec.effort }} / {{ rec.impact }}</div>
+                            </div>
                         </div>
-                        {% endfor %}
+                        <p class="text-muted mb-3 small">{{ rec.description }}</p>
+                        {% if rec.implementation_steps %}
+                        <div class="mt-3">
+                            <small class="text-accent fw-bold"><i class="fas fa-list-check me-1"></i>Implementation
+                                Steps:</small>
+                            <ul class="text-muted small mt-2 mb-0">
+                                {% for step in rec.implementation_steps[:3] %}
+                                <li>{{ step }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
                     {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-check-double fa-3x text-secondary opacity-25 mb-3"></i>
-                            <p class="text-muted">Stability thresholds maintained. No immediate refactors suggested.</p>
-                        </div>
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-double fa-3x text-secondary opacity-25 mb-3"></i>
+                        <p class="text-muted">No critical issues detected. Your architecture is well-structured!</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
+    <script>
+        $(document).ready(function () {
+            // AI Insights Generation
+            $('#generateAIInsights').on('click', function () {
+                const btn = $(this);
+                const jobId = btn.data('job-id');
+
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>AI Analyzing...');
+                $('#aiLoading').removeClass('d-none');
+                $('#aiResult').addClass('d-none');
+
+                $.get('/ai-analysis/' + jobId, function (data) {
+                    $('#aiLoading').addClass('d-none');
+
+                    if (data.error) {
+                        btn.prop('disabled', false).html('<i class="fas fa-exclamation-triangle me-2"></i>Retry Analysis');
+                        $('#aiReportText').html('<div class="text-danger p-4">' + data.error + '</div>');
+                        $('#aiResult').removeClass('d-none');
+                    } else {
+                        btn.html('<i class="fas fa-check-circle me-2"></i>Insights Generated');
+                        $('#aiReportText').html(renderAIReport(data.report_json));
+
+                        let reasoningHtml = '';
+                        if (data.reasoning) {
+                            reasoningHtml = typeof data.reasoning === 'object' ? JSON.stringify(data.reasoning, null, 2) : data.reasoning;
+                        }
+                        $('#aiReasoningText').text(reasoningHtml || 'Reasoning details not available');
+                        $('#aiResult').removeClass('d-none');
+                    }
+                }).fail(function () {
+                    $('#aiLoading').addClass('d-none');
+                    btn.prop('disabled', false).html('<i class="fas fa-redo me-2"></i>Retry Analysis');
+                    $('#aiReportText').html('<div class="text-danger p-4">Network error. Please retry.</div>');
+                    $('#aiResult').removeClass('d-none');
+                });
+            });
+
+            // Architecture Generation
+            $('#generateArchitecture').on('click', function () {
+                const btn = $(this);
+                const jobId = btn.data('job-id');
+
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Designing...');
+                $('#archLoading').removeClass('d-none');
+                $('#architectureResult').addClass('d-none');
+
+                $.get('/ai-architecture/' + jobId, function (data) {
+                    $('#archLoading').addClass('d-none');
+                    btn.prop('disabled', false).html('<i class="fas fa-cogs me-2"></i>Regenerate Architecture');
+
+                    if (data.error) {
+                        $('#architectureContent').html('<div class="text-danger p-4">' + data.error + '</div>');
+                    } else if (data.improved_architecture) {
+                        const arch = data.improved_architecture;
+                        let html = `
+                            <div class="glass-card p-4 mb-4">
+                                <h5 class="text-bright fw-bold mb-2">${arch.name}</h5>
+                                <p class="text-muted">${arch.description}</p>
+                                <div class="row mt-4">
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-3 bg-deep border border-glass text-center">
+                                            <small class="text-accent fw-bold">Estimated Effort</small>
+                                            <div class="h4 mb-0 text-bright">${arch.estimated_effort}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-3 bg-deep border border-glass text-center">
+                                            <small class="text-accent fw-bold">Expected MES Reduction</small>
+                                            <div class="h4 mb-0 text-bright">${arch.expected_mes_reduction}/10</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="glass-card p-4 mb-4">
+                                <h6 class="text-bright fw-bold mb-3"><i class="fas fa-cubes me-2 text-accent"></i>Components</h6>
+                                <div class="row g-3">
+                                    ${(arch.components || []).map(comp => `
+                                        <div class="col-md-6">
+                                            <div class="p-3 rounded-3 bg-deep border border-glass">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <strong class="text-bright">${comp.name}</strong>
+                                                    <span class="badge bg-primary small">${comp.type}</span>
+                                                </div>
+                                                <p class="text-muted small mb-2">${comp.purpose}</p>
+                                                <small class="text-accent">Tech: ${(comp.technologies || []).join(', ')}</small>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <div class="glass-card p-4">
+                                <h6 class="text-bright fw-bold mb-3"><i class="fas fa-chart-line me-2 text-accent"></i>Migration Plan</h6>
+                                <ul class="text-muted">
+                                    ${(arch.migration_steps || []).map(step => `<li class="mb-2">${step}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                        $('#architectureContent').html(html);
+                    }
+                    $('#architectureResult').removeClass('d-none');
+                }).fail(function () {
+                    $('#archLoading').addClass('d-none');
+                    btn.prop('disabled', false).html('<i class="fas fa-cogs me-2"></i>Retry');
+                    $('#architectureContent').html('<div class="text-danger p-4">Network error. Please retry.</div>');
+                    $('#architectureResult').removeClass('d-none');
+                });
+            });
+        });
+
+        function renderAIReport(report) {
+            if (!report || report.error) {
+                return `<div class="p-4 text-center text-danger">${report ? report.error : 'Empty response'}</div>`;
+            }
+
+            let html = '<div class="ai-report-container">';
+
+            if (report.executive_summary) {
+                html += `<div class="glass-card mb-4 p-4">
+                    <div class="text-bright small opacity-75 mb-2 text-uppercase fw-bold">Executive Summary</div>
+                    <div class="text-bright lead">${report.executive_summary}</div>
+                </div>`;
+            }
+
+            if (report.findings && Array.isArray(report.findings)) {
+                report.findings.forEach(finding => {
+                    const p = (finding.priority || 'Low').toLowerCase();
+                    let pClass = 'priority-low';
+                    if (p.includes('critical')) pClass = 'priority-critical';
+                    else if (p.includes('high')) pClass = 'priority-high';
+                    else if (p.includes('medium')) pClass = 'priority-medium';
+
+                    html += `<div class="glass-card mb-4 overflow-hidden">
+                        <div class="ai-card-title px-4 py-3 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-bright">${finding.title}</span>
+                            <span class="ai-badge ${pClass}">${finding.priority}</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="ai-field mb-3">
+                                <div class="ai-field-label">Root Cause:</div>
+                                <div class="ai-field-value">${finding.root_cause}</div>
+                            </div>
+                            <div class="ai-field mb-3">
+                                <div class="ai-field-label">Impact:</div>
+                                <div class="ai-field-value">${finding.impact}</div>
+                            </div>
+                            <div class="ai-field">
+                                <div class="ai-field-label">Recommendation:</div>
+                                <div class="ai-field-value text-accent">${finding.recommendation}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            if (report.strategic_plan) {
+                html += `<div class="glass-card p-4 secondary-glass">
+                    <h5 class="text-bright fw-bold mb-4 border-bottom border-glass pb-2">
+                        <i class="fas fa-chess-knight me-2 text-accent"></i>Strategic Execution Plan
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-4 mb-md-0">
+                            <div class="ai-phase-title mb-3">${report.strategic_plan.phase1?.title || 'Phase 1'}</div>
+                            <ul class="ai-list">
+                                ${(report.strategic_plan.phase1?.tasks || []).map(t => `<li>${t}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="col-md-4 mb-4 mb-md-0">
+                            <div class="ai-phase-title mb-3">${report.strategic_plan.phase2?.title || 'Phase 2'}</div>
+                            <ul class="ai-list">
+                                ${(report.strategic_plan.phase2?.tasks || []).map(t => `<li>${t}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="ai-phase-title mb-3">${report.strategic_plan.phase3?.title || 'Phase 3'}</div>
+                            <ul class="ai-list">
+                                ${(report.strategic_plan.phase3?.tasks || []).map(t => `<li>${t}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            html += '</div>';
+            return html;
+        }
+    </script>
+
     {% else %}
     <div class="row">
         <div class="col-12 text-center">
-            <div class="card">
-                <div class="card-body">
-                    <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
-                    <h3>Job Not Found</h3>
-                    <p>{{ error|default('The requested analysis job could not be found.') }}</p>
-                    <a href="/" class="btn btn-primary">Back to Home</a>
-                </div>
+            <div class="glass-card p-5">
+                <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
+                <h3>Job Not Found</h3>
+                <p>{{ error|default('The requested analysis job could not be found.') }}</p>
+                <a href="/" class="btn btn-premium">Back to Home</a>
             </div>
         </div>
     </div>

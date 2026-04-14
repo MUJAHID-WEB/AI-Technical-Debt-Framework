@@ -304,12 +304,15 @@ class ReportGenerator:
         tier1 = self.results.get('tier1', {})
         project_info = tier1.get('project_info', {})
         
+        tier6 = self.results.get('tier6', {})
+        
         metadata = [
             ['System Analyzed', project_info.get('name', 'Unknown Project')],
             ['Primary Language', project_info.get('language', 'Unknown')],
             ['Architecture Type', project_info.get('project_type', 'Unknown')],
             ['Total Services', str(tier1.get('statistics', {}).get('services_count', 0))],
             ['Total Models', str(tier1.get('statistics', {}).get('models_count', 0))],
+            ['Analysis Accuracy', f"{tier6.get('accuracy_rate', 0)}%"],
             ['Analysis Date', datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
         ]
         

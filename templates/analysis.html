@@ -21,7 +21,8 @@
                 {% if results and results.tier6 and results.tier6.accuracy_rate %}
                 <div class="ms-4 px-3 py-1 rounded-pill bg-deep border border-accent d-flex align-items-center">
                     <i class="fas fa-check-circle text-accent small me-2"></i>
-                    <span class="tiny text-muted fw-bold text-uppercase me-2" style="font-size: 0.65rem;">Accuracy</span>
+                    <span class="tiny text-muted fw-bold text-uppercase me-2"
+                        style="font-size: 0.65rem;">Accuracy</span>
                     <span class="text-bright fw-black">{{ results.tier6.accuracy_rate }}%</span>
                 </div>
                 {% endif %}
@@ -1121,6 +1122,82 @@
             return html;
         }
     </script>
+
+    <!-- Competitive Analysis Section -->
+    <div class="row mb-5" id="competitiveAnalysisRow">
+        <div class="col-12">
+            <div class="glass-card overflow-hidden">
+                <div class="ai-card-title px-4 py-3 d-flex align-items-center gap-3">
+                    <div class="symbol-box bg-accent-light p-2 rounded-3">
+                        <i class="fas fa-bridge-water text-accent"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 text-bright fw-bold">Competitive Landscape & Value Proposition</h5>
+                        <p class="text-muted tiny mb-0">How our AI Technical Debt Framework compares to standard tools</p>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="table-responsive">
+                        <table class="table table-premium mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="border-glass text-muted small uppercase">Capability / Feature</th>
+                                    <th class="border-glass text-muted small uppercase text-center">SonarQube</th>
+                                    <th class="border-glass text-muted small uppercase text-center">CodeClimate</th>
+                                    <th class="border-glass text-muted small uppercase text-center">MLflow / W&B</th>
+                                    <th class="border-glass text-accent small uppercase text-center bg-accent-soft">Our Framework</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border-glass text-bright fw-bold">General Code Technical Debt</td>
+                                    <td class="border-glass text-center text-success"><i class="fas fa-check-circle"></i></td>
+                                    <td class="border-glass text-center text-success"><i class="fas fa-check-circle"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-accent"><i class="fas fa-circle-check"></i></td>
+                                </tr>
+                                <tr>
+                                    <td class="border-glass text-bright fw-bold">AI/ML Architectural Smells</td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-accent fw-black">Proprietary</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-glass text-bright fw-bold">Model Entanglement (MES)</td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-times-circle"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-times-circle"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-times-circle"></i></td>
+                                    <td class="border-glass text-center text-accent"><i class="fas fa-circle-check"></i></td>
+                                </tr>
+                                <tr>
+                                    <td class="border-glass text-bright fw-bold">Hidden Dependency Detection</td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-accent"><i class="fas fa-circle-check"></i></td>
+                                </tr>
+                                <tr>
+                                    <td class="border-glass text-bright fw-bold">Maintainability vs AI Correlation</td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-times-circle"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-times-circle"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-times-circle"></i></td>
+                                    <td class="border-glass text-center text-accent"><i class="fas fa-circle-check"></i></td>
+                                </tr>
+                                <tr>
+                                    <td class="border-glass text-bright fw-bold">AI-Driven Architecture Proposal</td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-muted opacity-25"><i class="fas fa-minus"></i></td>
+                                    <td class="border-glass text-center text-accent"><i class="fas fa-circle-check"></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {% else %}
     <div class="row">

@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import time
 from dotenv import load_dotenv
 from collections import defaultdict
 
@@ -14,8 +15,9 @@ class AIAnalyzer:
     
     def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
-        self.url = "https://openrouter.ai/api/v1/chat/completions"
-        self.model = "stepfun/step-3.5-flash:free"
+        self.url = os.getenv("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
+        self.model = os.getenv("OPENROUTER_MODEL", "google/gemma-4-26b-a4b-it:free")
+        print(f"🤖 AIAnalyzer initialized with model: {self.model}")
         
     def analyze_structure(self, tier1_data):
         """
@@ -317,65 +319,98 @@ SYSTEM METRICS:
 Provide a comprehensive analysis with:
 
 1. EXECUTIVE SUMMARY: High-level overview of system health
-2. KEY FINDINGS: 3-5 critical findings with priorities (Critical/High/Medium/Low)
-3. For each finding include: root cause, impact, and specific recommendation
-4. STRATEGIC PLAN: Phased approach (0-3 months, 3-6 months, 6-12 months)
+2. TIER NARRATIVES: A professional, academic-style paragraph for each of the 6 tiers (Tier 1-6) summarizing what the data indicates.
+3. DETAILED RECOMMENDATIONS: 5-8 specific, generative findings based on the project code and metrics.
+4. For each recommendation include: 
+    - Title, Priority (Critical/High/Medium/Low), Effort (Low/Medium/High), Impact (High/Medium/Low)
+    - Category (Architecture, Code Quality, Security, DevOps, AI Integrity)
+    - Detailed description including root cause
+    - Actionable implementation steps (list of 3-5 items)
+5. STRATEGIC PLAN: Phased approach (0-3 months, 3-6 months, 6-12 months)
 
 Return JSON with structure:
 {{
     "executive_summary": "summary text",
-    "findings": [
+    "tier_narratives": {{ "tier1": "...", "tier2": "...", "tier3": "...", "tier4": "...", "tier5": "...", "tier6": "..." }},
+    "recommendations": [
         {{
             "title": "Finding title",
             "priority": "Critical|High|Medium|Low",
-            "root_cause": "Detailed explanation",
-            "impact": "System impact description",
-            "recommendation": "Actionable recommendation"
+            "category": "Architecture|Code Quality|Security|DevOps|AI Integrity",
+            "description": "Detailed explanation with root cause",
+            "effort": "Low|Medium|High",
+            "impact": "High|Medium|Low",
+            "implementation_steps": ["step1", "step2", "step3"]
         }}
     ],
-    "strategic_plan": {{
-        "phase1": {{"title": "Phase 1 (0-3 Months)", "tasks": ["task1", "task2"]}},
-        "phase2": {{"title": "Phase 2 (3-6 Months)", "tasks": ["task1", "task2"]}},
-        "phase3": {{"title": "Phase 3 (6-12 Months)", "tasks": ["task1", "task2"]}}
-    }}
+    "strategic_plan": [
+        {{"phase": "0-3 Months", "tasks": ["task1", "task2"]}},
+        {{"phase": "3-6 Months", "tasks": ["task1", "task2"]}},
+        {{"phase": "6-12 Months", "tasks": ["task1", "task2"]}}
+    ]
 }}"""
 
-        try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            }
-            
-            payload = {
-                "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"},
-                "temperature": 0.3
-            }
-            
-            response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=90)
-            response.raise_for_status()
-            
-            result = response.json()
-            content = result['choices'][0]['message']['content']
-            
+        max_retries = 3
+        retry_delay = 5  # Start with 5 seconds
+        
+        for attempt in range(max_retries):
             try:
-                report_data = json.loads(content)
-                return {
-                    "report_json": report_data,
-                    "reasoning": result['choices'][0]['message'].get('reasoning_details', {})
-                }
-            except json.JSONDecodeError:
-                return {
-                    "error": "JSON Parse Error",
-                    "raw_content": content[:500]
+                headers = {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
                 }
                 
-        except Exception as e:
-            return {
-                "error": f"AI Analysis failed: {str(e)}",
-                "reasoning": "Connection error"
-            }
+                payload = {
+                    "model": self.model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.3
+                }
+                
+                print(f"📡 AI Strategic Analysis Request: {self.model} (Attempt {attempt + 1})")
+                response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=90)
+                print(f"📥 Response status: {response.status_code}")
+                
+                if response.status_code == 429:
+                    if attempt < max_retries - 1:
+                        print(f"⚠️ Rate limited (429). Retrying in {retry_delay}s...")
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
+                        continue
+                    else:
+                        return {
+                            "error": "OpenRouter rate limit exceeded. Please wait a few minutes and try again.",
+                            "type": "rate_limit_error"
+                        }
+                
+                response.raise_for_status()
+                
+                result = response.json()
+                content = result['choices'][0]['message']['content']
+                
+                try:
+                    report_data = json.loads(content)
+                    return {
+                        "report_json": report_data,
+                        "reasoning": result['choices'][0]['message'].get('reasoning_details', {})
+                    }
+                except json.JSONDecodeError:
+                    return {
+                        "error": "Failed to parse AI response as JSON",
+                        "raw_response": content
+                    }
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    print(f"⚠️ Request failed: {str(e)}. Retrying...")
+                    time.sleep(2)
+                    continue
+                print(f"❌ AI Analysis Error: {str(e)}")
+                return {
+                    "error": f"AI Analysis failed after {max_retries} attempts: {str(e)}",
+                    "reasoning": f"Exception occurred: {type(e).__name__}"
+                }
+        
+        return {"error": "AI Analysis failed after multiple attempts"}
     
     # Template methods for fallback when AI is unavailable
     

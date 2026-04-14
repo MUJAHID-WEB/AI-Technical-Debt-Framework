@@ -196,10 +196,14 @@ class ReportGenerator:
         
         # Abstract and Executive Summary (Page 2)
         story.extend(self._create_abstract_section())
-        story.append(PageBreak())
+        story.extend(self._create_comparison_section())
         
         # Methodology and Metrics (Page 3)
         story.extend(self._create_methodology_section())
+        story.append(PageBreak())
+        
+        # Detailed Tier Analysis Results (Pages 4-6)
+        story.extend(self._create_tier_results_section())
         story.append(PageBreak())
         
         # AI Strategic Insights (Page 4)
@@ -257,12 +261,10 @@ class ReportGenerator:
         ))
         story.append(Spacer(1, 40))
         
-        # MES Score Box
+        # Metrics Container Row (Side-by-Side)
         tier4 = self.results.get('tier4', {})
         mes_score = tier4.get('mes_score', 0)
-        mes_level = tier4.get('mes_level', 'UNKNOWN')
         
-        # Determine color based on score
         if mes_score <= 3:
             level_color = colors.HexColor('#2ecc71')
             level_text = "LOW ENTANGLEMENT"
@@ -274,30 +276,73 @@ class ReportGenerator:
             level_text = "CRITICAL ENTANGLEMENT"
         
         mes_table_data = [
-            ['Model Entanglement Score (MES)'],
+            ['Model Entanglement Score'],
             [f"{mes_score}/10"],
             [level_text]
         ]
         
-        mes_table = Table(mes_table_data, colWidths=[300])
+        mes_table = Table(mes_table_data, colWidths=[200])
         mes_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, 0), self.primary_color),
             ('TEXTCOLOR', (0, 0), (0, 0), colors.white),
-            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 12),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 10),
             ('BACKGROUND', (0, 1), (0, 1), self.light_bg),
             ('TEXTCOLOR', (0, 1), (0, 1), self.accent_color),
-            ('FONTSIZE', (0, 1), (0, 1), 48),
-            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (0, 1), 32),
             ('BACKGROUND', (0, 2), (0, 2), level_color),
             ('TEXTCOLOR', (0, 2), (0, 2), colors.white),
-            ('FONTSIZE', (0, 2), (0, 2), 11),
-            ('TOPPADDING', (0, 0), (0, -1), 15),
-            ('BOTTOMPADDING', (0, 0), (0, -1), 15),
+            ('FONTSIZE', (0, 2), (0, 2), 9),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
         ]))
         
-        story.append(mes_table)
+        # Accuracy Score Box
+        tier6 = self.results.get('tier6', {})
+        accuracy = tier6.get('accuracy_rate', 0)
+        
+        if accuracy >= 90:
+            acc_color = colors.HexColor('#2ecc71')
+            acc_text = "HIGH CONFIDENCE"
+        elif accuracy >= 70:
+            acc_color = colors.HexColor('#f39c12')
+            acc_text = "RELIABLE ANALYSIS"
+        else:
+            acc_color = colors.HexColor('#e74c3c')
+            acc_text = "LOW CONFIDENCE"
+
+        acc_table_data = [
+            ['Analysis Confidence'],
+            [f"{accuracy}%"],
+            [acc_text]
+        ]
+        
+        acc_table = Table(acc_table_data, colWidths=[200])
+        acc_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, 0), self.secondary_color),
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 10),
+            ('BACKGROUND', (0, 1), (0, 1), self.light_bg),
+            ('TEXTCOLOR', (0, 1), (0, 1), colors.black),
+            ('FONTSIZE', (0, 1), (0, 1), 32),
+            ('BACKGROUND', (0, 2), (0, 2), acc_color),
+            ('TEXTCOLOR', (0, 2), (0, 2), colors.white),
+            ('FONTSIZE', (0, 2), (0, 2), 9),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ]))
+        
+        # Combined Row
+        metrics_row = Table([[mes_table, Spacer(1, 20), acc_table]], colWidths=[200, 20, 200])
+        metrics_row.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+        
+        story.append(metrics_row)
         story.append(Spacer(1, 40))
         
         # Project Metadata
@@ -332,6 +377,49 @@ class ReportGenerator:
         
         return story
     
+    def _create_comparison_section(self):
+        """Create competitive comparison section"""
+        story = []
+        story.append(PageBreak())
+        story.append(Paragraph("Value Proposition & Competitive Analysis", self.styles['SectionHeader']))
+        story.append(Spacer(1, 12))
+        
+        story.append(Paragraph(
+            "This section compares the AI Technical Debt Framework's unique capabilities against existing industry standards "
+            "to highlight the specific value added by this multi-tier architectural analysis.",
+            self.styles['AcademicBody']
+        ))
+        story.append(Spacer(1, 15))
+        
+        data = [
+            ['Feature / Capability', 'SonarQube', 'CodeClimate', 'MLflow/W&B', 'AI Framework (Ours)'],
+            ['General Code Debt', 'Full', 'Full', 'None', 'Full'],
+            ['AI Architectual Smells', 'None', 'None', 'None', 'Proprietary'],
+            ['Model Entanglement (MES)', 'No', 'No', 'No', 'Yes (Tier 4)'],
+            ['Hidden ML Consumers', 'No', 'No', 'No', 'Yes (Tier 3)'],
+            ['AI Isolation Pattern Detection', 'No', 'No', 'Limited', 'Full (Tier 2)'],
+            ['Proposed AI Architecture', 'No', 'No', 'No', 'Yes (AI-Driven)']
+        ]
+        
+        table = Table(data, colWidths=[140, 90, 90, 90, 90])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.primary_color),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('TEXTCOLOR', (-1, 1), (-1, -1), self.accent_color),
+            ('FONTNAME', (-1, 1), (-1, -1), 'Helvetica-Bold'),
+        ]))
+        
+        story.append(table)
+        story.append(Spacer(1, 20))
+        return story
+
     def _create_abstract_section(self):
         """Create abstract and executive summary"""
         story = []
@@ -477,6 +565,142 @@ class ReportGenerator:
         story.append(Paragraph(hypothesis_text, self.styles['AcademicBody']))
         
         return story
+
+    def _create_tier_results_section(self):
+        """Create detailed results for each of the six tiers"""
+        story = []
+        
+        story.append(Paragraph("Detailed Tier Analysis Results", self.styles['SectionHeader']))
+        story.append(Spacer(1, 12))
+        
+        ai_narratives = self.results.get('ai_analysis', {}).get('tier_narratives', {})
+        
+        # --- Tier 1: Data Collection ---
+        story.append(Paragraph("Tier 1: Data Collection & Inventory", self.styles['SubsectionHeader']))
+        if 'tier1' in ai_narratives:
+            story.append(Paragraph(ai_narratives['tier1'], self.styles['AcademicBody']))
+            story.append(Spacer(1, 10))
+            
+        tier1 = self.results.get('tier1', {})
+        stats = tier1.get('statistics', {})
+        t1_data = [
+            ['Metric', 'Value'],
+            ['Total Services Detected', str(stats.get('services_count', 0))],
+            ['Total ML Models Flagged', str(stats.get('models_count', 0))],
+            ['Code Files Scanned', str(stats.get('files_count', 0))],
+            ['Primary Frameworks', ", ".join(tier1.get('frameworks', [])[:5])]
+        ]
+        t1_table = Table(t1_data, colWidths=[150, 250])
+        t1_table.setStyle(self._get_academic_table_style())
+        story.append(t1_table)
+        story.append(Spacer(1, 20))
+
+        # --- Tier 2: System Analysis ---
+        story.append(Paragraph("Tier 2: Architectural System Analysis", self.styles['SubsectionHeader']))
+        if 'tier2' in ai_narratives:
+            story.append(Paragraph(ai_narratives['tier2'], self.styles['AcademicBody']))
+            story.append(Spacer(1, 10))
+            
+        tier2 = self.results.get('tier2', {})
+        t2_data = [
+            ['Component Category', 'Count / Type'],
+            ['API Endpoints', str(len(tier2.get('endpoints', [])))],
+            ['External Dependencies', str(len(tier2.get('dependencies', [])))],
+            ['Architecture Style', tier2.get('architecture_type', 'Monolithic/N-Tier')]
+        ]
+        t2_table = Table(t2_data, colWidths=[150, 250])
+        t2_table.setStyle(self._get_academic_table_style())
+        story.append(t2_table)
+        story.append(Spacer(1, 20))
+
+        # --- Tier 3: AI Smell Detection ---
+        story.append(Paragraph("Tier 3: AI-Specific Code Smell Detection", self.styles['SubsectionHeader']))
+        if 'tier3' in ai_narratives:
+            story.append(Paragraph(ai_narratives['tier3'], self.styles['AcademicBody']))
+            story.append(Spacer(1, 10))
+            
+        tier3 = self.results.get('tier3', {})
+        t3_data = [
+            ['Smell Type', 'Status / Severity'],
+            ['Direct Model Calls', f"{tier3.get('direct_model_calls', {}).get('count', 0)} instances"],
+            ['Glue Code Ratio', f"{tier3.get('glue_code_ratio', 0):.1%}"],
+            ['Hidden Consumers', f"{len(tier3.get('hidden_consumers', []))} detected"]
+        ]
+        t3_table = Table(t3_data, colWidths=[150, 250])
+        t3_table.setStyle(self._get_academic_table_style())
+        story.append(t3_table)
+        story.append(Spacer(1, 20))
+
+        # --- Tier 4: MES Computation ---
+        story.append(Paragraph("Tier 4: Model Entanglement Score (MES)", self.styles['SubsectionHeader']))
+        if 'tier4' in ai_narratives:
+            story.append(Paragraph(ai_narratives['tier4'], self.styles['AcademicBody']))
+            story.append(Spacer(1, 10))
+            
+        tier4 = self.results.get('tier4', {})
+        comp = tier4.get('components', {})
+        t4_data = [['Entanglement Factor', 'Weight Contribution']]
+        for k, v in comp.items():
+            t4_data.append([k.replace('_', ' ').title(), f"{v:.2f}"])
+            
+        t4_table = Table(t4_data, colWidths=[150, 250])
+        t4_table.setStyle(self._get_academic_table_style())
+        story.append(t4_table)
+        story.append(Spacer(1, 20))
+
+        # --- Tier 5: Maintainability ---
+        story.append(Paragraph("Tier 5: Infrastructure & Maintainability", self.styles['SubsectionHeader']))
+        if 'tier5' in ai_narratives:
+            story.append(Paragraph(ai_narratives['tier5'], self.styles['AcademicBody']))
+            story.append(Spacer(1, 10))
+            
+        tier5 = self.results.get('tier5', {})
+        bugs = tier5.get('bug_metrics', {})
+        t5_data = [
+            ['Maintainability Metric', 'Value'],
+            ['Code Churn Rate', f"{tier5.get('churn_rate', 0):.2f}"],
+            ['Bug-Fix Ratio', f"{bugs.get('bug_rate', 0):.1%}"],
+            ['Change Impact Radius', f"{tier5.get('impact_radius', 0):.2f}"]
+        ]
+        t5_table = Table(t5_data, colWidths=[150, 250])
+        t5_table.setStyle(self._get_academic_table_style())
+        story.append(t5_table)
+        story.append(Spacer(1, 20))
+
+        # --- Tier 6: Validation ---
+        story.append(Paragraph("Tier 6: Statistical Validation & Hypothesis", self.styles['SubsectionHeader']))
+        if 'tier6' in ai_narratives:
+            story.append(Paragraph(ai_narratives['tier6'], self.styles['AcademicBody']))
+            story.append(Spacer(1, 10))
+            
+        tier6 = self.results.get('tier6', {})
+        t6_data = [
+            ['Validation Metric', 'Value'],
+            ['Analysis Accuracy', f"{tier6.get('accuracy_rate', 0):.1%}"],
+            ['Degradation Ratio', f"{tier6.get('degradation_ratio', 0):.2f}x"],
+            ['Hypothesis Confirmed', 'Yes' if tier6.get('hypothesis_confirmed', False) else 'No']
+        ]
+        t6_table = Table(t6_data, colWidths=[150, 250])
+        t6_table.setStyle(self._get_academic_table_style())
+        story.append(t6_table)
+        story.append(Spacer(1, 20))
+        
+        return story
+
+    def _get_academic_table_style(self):
+        """Standard helper for tier result tables"""
+        return TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.primary_color),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BACKGROUND', (0, 1), (-1, -1), self.light_bg),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ])
     
     def _create_ai_insights_section(self):
         """Create AI strategic insights section"""
@@ -620,31 +844,37 @@ class ReportGenerator:
         story.append(arch_table)
         story.append(Spacer(1, 15))
         
-        # Migration Strategy
-        story.append(Paragraph("Migration Strategy", self.styles['SubsectionHeader']))
+        # Migration Strategy (Strategic Plan)
+        story.append(Paragraph("AI Migration Strategy", self.styles['SubsectionHeader']))
         story.append(Spacer(1, 6))
         
-        phases = [
-            ['Phase', 'Duration', 'Activities', 'Success Criteria'],
-            ['Phase 1', '0-3 Months', 'Implement model registry, Create API contracts, Set up monitoring', 'All models versioned, Basic observability'],
-            ['Phase 2', '3-6 Months', 'Deploy model serving layer, Migrate high-priority models, Implement shadow mode', 'Model APIs available, Shadow testing active'],
-            ['Phase 3', '6-9 Months', 'Migrate remaining models, Decommission direct access, Implement A/B testing', 'Full isolation achieved, Zero direct model calls'],
-            ['Phase 4', '9-12 Months', 'Optimize performance, Implement auto-scaling, Advanced monitoring', 'Production-ready, Automated operations']
-        ]
+        strategic_plan = self.results.get('ai_analysis', {}).get('strategic_plan', [])
         
-        migration_table = Table(phases, colWidths=[70, 70, 200, 120])
-        migration_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), self.secondary_color),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 8),
-            ('BACKGROUND', (0, 1), (-1, -1), self.light_bg),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
-            ('FONTSIZE', (0, 1), (-1, -1), 7),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
+        if strategic_plan:
+            plan_data = [['Phase / Timeline', 'Implementation Activities']]
+            for p in strategic_plan:
+                phase_name = p.get('phase', 'Next Phase')
+                tasks = p.get('tasks', [])
+                plan_data.append([phase_name, " • " + "\n • ".join(tasks)])
+                
+            plan_table = Table(plan_data, colWidths=[120, 330])
+            plan_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), self.secondary_color),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('BACKGROUND', (0, 1), (-1, -1), self.light_bg),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            story.append(plan_table)
+        else:
+            # Fallback to a simplified view if AI plan is missing
+            story.append(Paragraph("Sequential AI integration and model decoupling strategy.", self.styles['AcademicBody']))
         
-        story.append(migration_table)
         story.append(Spacer(1, 15))
         
         # Expected Outcomes

@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,8 +14,9 @@ class AIArchitect:
     
     def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
-        self.url = "https://openrouter.ai/api/v1/chat/completions"
-        self.model = "stepfun/step-3.5-flash:free"
+        self.url = os.getenv("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
+        self.model = os.getenv("OPENROUTER_MODEL", "google/gemma-4-26b-a4b-it:free")
+        print(f"🏗️ AIArchitect initialized with model: {self.model}")
         
     def propose_architecture(self, results):
         """
@@ -92,34 +94,67 @@ Return a JSON object with this structure:
     }}
 }}"""
 
-        try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            }
-            
-            payload = {
-                "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"},
-                "temperature": 0.3
-            }
-            
-            response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=90)
-            response.raise_for_status()
-            
-            result = response.json()
-            content = result['choices'][0]['message']['content']
-            
+        max_retries = 3
+        retry_delay = 5
+        
+        for attempt in range(max_retries):
             try:
-                architecture = json.loads(content)
-                return architecture
-            except json.JSONDecodeError:
-                return self._generate_template_architecture(results)
+                headers = {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                }
                 
-        except Exception as e:
-            print(f"AI Architecture generation error: {e}")
-            return self._generate_template_architecture(results)
+                payload = {
+                    "model": self.model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.4
+                }
+                
+                print(f"📡 AI Architecture Request: {self.model} (Attempt {attempt + 1})")
+                response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=90)
+                print(f"📥 Response status: {response.status_code}")
+                
+                if response.status_code == 429:
+                    if attempt < max_retries - 1:
+                        print(f"⚠️ Rate limited (429). Retrying in {retry_delay}s...")
+                        time.sleep(retry_delay)
+                        retry_delay *= 2
+                        continue
+                    else:
+                        return {
+                            "error": "OpenRouter rate limit exceeded. Please wait a few minutes and try again.",
+                            "type": "rate_limit_error"
+                        }
+                        
+                response.raise_for_status()
+                
+                result = response.json()
+                content = result['choices'][0]['message']['content']
+                
+                try:
+                    architecture_data = json.loads(content)
+                    return {
+                        "architecture_json": architecture_data,
+                        "explanation": architecture_data.get('explanation', "AI-proposed architectural improvements.")
+                    }
+                except json.JSONDecodeError:
+                    return {
+                        "error": "Failed to parse AI response as JSON",
+                        "raw_response": content
+                    }
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    print(f"⚠️ Request failed: {str(e)}. Retrying...")
+                    time.sleep(2)
+                    continue
+                print(f"❌ AI Architect Error: {str(e)}")
+                return {
+                    "error": f"AI Architecture failed after {max_retries} attempts: {str(e)}",
+                    "reasoning": f"Exception occurred: {type(e).__name__}"
+                }
+        
+        return {"error": "AI Architecture proposal failed after multiple attempts"}
     
     def _generate_template_architecture(self, results):
         """Generate template architecture when AI is unavailable"""

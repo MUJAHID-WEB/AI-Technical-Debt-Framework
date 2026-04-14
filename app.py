@@ -262,7 +262,10 @@ def ai_analysis(job_id):
         ai_result = analyzer.analyze_results(results)
         return jsonify(ai_result)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ AI Analysis Route Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e), "type": "route_exception"}), 500
 
 @app.route('/ai-architecture/<job_id>')
 def ai_architecture(job_id):
@@ -279,7 +282,10 @@ def ai_architecture(job_id):
         arch_result = architect.propose_architecture(results)
         return jsonify(arch_result)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ AI Architecture Route Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e), "type": "route_exception"}), 500
 
 @app.route('/download-report/<job_id>')
 def download_report(job_id):
@@ -613,11 +619,16 @@ def run_complete_analysis(job_id, project_path):
         print(f"  ✓ Degradation Ratio: {tier6_result.get('degradation_ratio', 0):.2f}")
         print(f"  ✓ AI Architecture Proposed: Yes")
         
-        # ===== GENERATE COMPREHENSIVE RECOMMENDATIONS =====
-        print("\n💡 Generating AI-Powered Recommendations")
+        # ===== GENERATE COMPREHENSIVE AI ANALYSIS & RECOMMENDATIONS =====
+        print("\n💡 Generating AI-Powered Strategic Analysis")
         print("-" * 40)
         
-        recommendations = generate_ai_recommendations(tier_results, ai_analyzer)
+        # This replaces the old static generate_ai_recommendations with a full AI analysis
+        ai_analysis = ai_analyzer.analyze_results(tier_results)
+        tier_results['ai_analysis'] = ai_analysis
+        
+        # Map findings back to the recommendations list for UI compatibility
+        recommendations = ai_analysis.get('recommendations', [])
         tier_results['recommendations'] = recommendations
         
         for i, rec in enumerate(recommendations[:5], 1):
@@ -667,158 +678,12 @@ def run_complete_analysis(job_id, project_path):
                 })
 
 def generate_ai_recommendations(tier_results, ai_analyzer):
-    """Generate AI-powered recommendations"""
-    recommendations = []
+    """
+    OBSOLETE: Retained for compatibility. 
+    Analysis is now handled by ai_analyzer.analyze_results()
+    """
+    return []
     
-    tier3 = tier_results.get('tier3', {})
-    tier4 = tier_results.get('tier4', {})
-    tier5 = tier_results.get('tier5', {})
-    
-    # Direct model calls
-    direct_calls = tier3.get('direct_model_calls', {})
-    if direct_calls.get('count', 0) > 0:
-        recommendations.append({
-            'priority': 'HIGH' if direct_calls.get('count', 0) > 2 else 'MEDIUM',
-            'title': 'Introduce AI Service Isolation Layer',
-            'description': f"Detected {direct_calls.get('count', 0)} services directly calling ML models. Implement a dedicated model serving layer with gRPC/REST APIs to decouple business logic from AI components.",
-            'effort': 'Medium',
-            'impact': 'High',
-            'category': 'Architecture',
-            'implementation_steps': [
-                'Create a dedicated model serving service',
-                'Expose models via REST/gRPC endpoints',
-                'Update existing services to call the new API',
-                'Implement caching and load balancing'
-            ]
-        })
-    
-    # Glue code
-    glue_ratio = tier3.get('glue_code_ratio', 0)
-    if glue_ratio > 0.2:
-        recommendations.append({
-            'priority': 'HIGH' if glue_ratio > 0.3 else 'MEDIUM',
-            'title': 'Standardize Data Transformation Pipeline',
-            'description': f"Glue code represents {glue_ratio:.1%} of codebase. Implement a reusable feature engineering library to eliminate repetitive transformation logic.",
-            'effort': 'Medium',
-            'impact': 'Medium',
-            'category': 'Code Quality',
-            'implementation_steps': [
-                'Identify common transformation patterns',
-                'Create a shared feature engineering library',
-                'Implement versioned transformation pipelines',
-                'Add comprehensive tests for transformations'
-            ]
-        })
-    
-    # Hidden consumers
-    hidden = tier3.get('hidden_consumers', [])
-    if hidden:
-        recommendations.append({
-            'priority': 'HIGH',
-            'title': 'Implement Model Contract Registry',
-            'description': f"Found {len(hidden)} undocumented model consumers. Establish a contract-first approach with schema validation and API versioning.",
-            'effort': 'Low',
-            'impact': 'High',
-            'category': 'Documentation',
-            'implementation_steps': [
-                'Define model input/output schemas',
-                'Implement schema validation middleware',
-                'Create API documentation portal',
-                'Set up consumer registration process'
-            ]
-        })
-    
-    # Feedback loops
-    feedback_loops = tier3.get('feedback_loops', [])
-    if feedback_loops:
-        recommendations.append({
-            'priority': 'CRITICAL',
-            'title': 'Break Feedback Loops with Shadow Deployment',
-            'description': f"Detected {len(feedback_loops)} potential feedback loops that can cause model degradation. Implement shadow deployment for model validation before production.",
-            'effort': 'High',
-            'impact': 'Critical',
-            'category': 'MLOps',
-            'implementation_steps': [
-                'Set up shadow deployment environment',
-                'Implement A/B testing framework',
-                'Add model performance monitoring',
-                'Create automated rollback procedures'
-            ]
-        })
-    
-    # MES-based recommendations
-    mes = tier4.get('mes_score', 0)
-    if mes > 7:
-        recommendations.append({
-            'priority': 'CRITICAL',
-            'title': 'Architectural Refactoring for AI Isolation',
-            'description': f'Critical MES score of {mes}/10. Restructure architecture with clear boundaries between AI and business logic using sidecar pattern or model serving mesh.',
-            'effort': 'High',
-            'impact': 'Critical',
-            'category': 'Architecture',
-            'implementation_steps': [
-                'Design AI service boundaries',
-                'Implement model serving sidecar',
-                'Migrate models to dedicated services',
-                'Set up monitoring and observability'
-            ]
-        })
-    elif mes > 4:
-        recommendations.append({
-            'priority': 'MEDIUM',
-            'title': 'Gradual Model Decoupling',
-            'description': f'Moderate MES score of {mes}/10. Start decoupling AI components using strangler pattern.',
-            'effort': 'Medium',
-            'impact': 'Medium',
-            'category': 'Architecture',
-            'implementation_steps': [
-                'Identify candidate models for decoupling',
-                'Create facade interfaces',
-                'Gradually replace direct calls',
-                'Monitor performance impact'
-            ]
-        })
-    
-    # Maintainability recommendations
-    bug_rate = tier5.get('bug_metrics', {}).get('bug_rate', 0)
-    if bug_rate > 0.2:
-        recommendations.append({
-            'priority': 'HIGH',
-            'title': 'Enhance Testing for AI Components',
-            'description': f"High bug rate ({bug_rate:.1%}) in AI-related code. Implement comprehensive testing including unit tests, integration tests, and model validation tests.",
-            'effort': 'Medium',
-            'impact': 'High',
-            'category': 'Testing',
-            'implementation_steps': [
-                'Add unit tests for model loading',
-                'Implement integration tests for API endpoints',
-                'Add model performance regression tests',
-                'Set up CI/CD pipeline for model validation'
-            ]
-        })
-    
-    # Add AI-specific best practices
-    recommendations.append({
-        'priority': 'LOW',
-        'title': 'Implement Model Versioning and Registry',
-        'description': 'Establish a model registry (e.g., MLflow) to track model versions, metrics, and metadata for better governance.',
-        'effort': 'Low',
-        'impact': 'Medium',
-        'category': 'MLOps',
-        'implementation_steps': [
-            'Set up MLflow or similar registry',
-            'Version all production models',
-            'Track model performance metrics',
-            'Implement model promotion workflows'
-        ]
-    })
-    
-    # Sort by priority
-    priority_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
-    recommendations.sort(key=lambda x: priority_order.get(x.get('priority', 'LOW'), 4))
-    
-    return recommendations[:8]  # Return top 8 recommendations
-
 if __name__ == '__main__':
     print("\n" + "="*60)
     print("🚀 AI-Enhanced Technical Debt Detection Framework")

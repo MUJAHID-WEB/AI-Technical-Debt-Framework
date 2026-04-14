@@ -296,7 +296,7 @@ def download_report(job_id):
         return send_file(
             report_path,
             as_attachment=True,
-            download_name=f'ai_debt_report_{job_id[:8]}.pdf',
+            download_name=f'ai_debt_report_System_Analyzed_{job_id[:8]}.pdf',
             mimetype='application/pdf'
         )
     
@@ -313,7 +313,7 @@ def download_report(job_id):
             return send_file(
                 report_path,
                 as_attachment=True,
-                download_name=f'ai_debt_report_{job_id[:8]}.pdf',
+                download_name=f'ai_debt_report_System_Analyzed_{job_id[:8]}.pdf',
                 mimetype='application/pdf'
             )
         except Exception as e:

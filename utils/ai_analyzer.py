@@ -344,9 +344,10 @@ Return JSON with structure:
         }}
     ],
     "strategic_plan": [
-        {{"phase": "0-3 Months", "tasks": ["task1", "task2"]}},
-        {{"phase": "3-6 Months", "tasks": ["task1", "task2"]}},
-        {{"phase": "6-12 Months", "tasks": ["task1", "task2"]}}
+        {{"phase": "Phase 1: Foundation (1-2 months)", "tasks": ["task1", "task2"]}},
+        {{"phase": "Phase 2: Isolation (2-3 months)", "tasks": ["task1", "task2"]}},
+        {{"phase": "Phase 3: Migration (2-3 months)", "tasks": ["task1", "task2"]}},
+        {{"phase": "Phase 4: Optimization (1-2 months)", "tasks": ["task1", "task2"]}}
     ]
 }}"""
 

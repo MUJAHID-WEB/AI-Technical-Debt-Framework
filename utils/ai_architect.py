@@ -52,12 +52,15 @@ SERVICES:
 MODELS:
 {json.dumps([{'name': m.get('name'), 'type': m.get('type', 'Unknown')} for m in models[:10]], indent=2)}
 
-Please provide a detailed improved architecture that:
-1. Introduces proper AI isolation layers (model serving, feature store, etc.)
-2. Reduces model entanglement and technical debt
-3. Improves maintainability and scalability
-4. Follows microservices best practices
-5. Includes specific component recommendations
+Please provide a detailed improved architecture that strictly follows the "Proposed AI Isolation Architecture" from the CSE459 paper. Ensure the proposal includes these 6 core components:
+1. API Gateway: Route requests, handle authentication and rate limiting (e.g., Kong, NGINX).
+2. Business Service Layer: Domain logic isolated from direct model dependencies.
+3. Model Serving Layer: Dedicated inference service (e.g., BentoML, Seldon Core).
+4. Feature Store: Centralized feature engineering and versioning (e.g., Feast, Hopsworks).
+5. Model Registry: Tracking model versions, metadata, and contracts (e.g., MLflow, W&B).
+6. Observability Stack: System health and model performance metrics (e.g., Prometheus, Grafana, Jaeger).
+
+The goal is to achieve full AI isolation and significant Model Entanglement Score (MES) reduction.
 
 Return a JSON object with this structure:
 {{

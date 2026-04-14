@@ -345,15 +345,17 @@ class AISmellDetector:
             stages = pipeline.get('stages', 1)
             path = pipeline.get('path', '')
             
-            # Calculate complexity based on files and branching
-            complexity = self._calculate_pipeline_complexity_score(path)
+            # Implementation aligned with Sub-step 3D (Page 4)
+            branching_factor = self._calculate_branching_factor(path)
+            complexity_score = stages * branching_factor
             
             pipeline_info = {
                 'name': pipeline.get('name', 'unknown'),
                 'path': path,
                 'stages': stages,
-                'complexity': complexity,
-                'is_complex': stages > 5 or complexity > 10
+                'branching_factor': branching_factor,
+                'complexity': complexity_score,
+                'is_complex': stages > 5 or branching_factor > 2
             }
             
             if pipeline_info['is_complex']:
@@ -367,44 +369,36 @@ class AISmellDetector:
         
         print(f"  ✓ Complex pipelines: {len(complex_pipelines)}")
     
-    def _calculate_pipeline_complexity_score(self, pipeline_path):
-        """Calculate complexity score for a pipeline"""
-        complexity = 1.0
+    def _calculate_branching_factor(self, pipeline_path):
+        """
+        Calculate branching factor (average branching per stage)
+        Aligned with Equation 5 / Sub-step 3D
+        """
+        branch_count = 0
+        file_count = 0
         full_path = os.path.join(self.project_path, pipeline_path)
         
         if not os.path.exists(full_path):
-            return complexity
+            return 1.0
         
         for root, dirs, files in os.walk(full_path):
             for file in files:
                 if file.endswith('.py'):
+                    file_count += 1
                     file_path = os.path.join(root, file)
                     try:
                         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                             content = f.read()
-                            
-                            # Count conditional branches
-                            if_count = content.count('if ')
-                            elif_count = content.count('elif ')
-                            else_count = content.count('else:')
-                            
-                            complexity += (if_count + elif_count + else_count) * 0.2
-                            
-                            # Count loops
-                            for_count = content.count('for ')
-                            while_count = content.count('while ')
-                            complexity += (for_count + while_count) * 0.2
-                            
-                            # Count function calls
-                            complexity += content.count('def ') * 0.3
-                            
-                            # Check for branching
-                            if 'branch' in content or 'case' in content:
-                                complexity += 0.5
+                            # Count branching points
+                            branch_count += content.count('if ')
+                            branch_count += content.count('elif ')
+                            branch_count += content.count('case ')
                     except:
                         pass
         
-        return round(complexity, 2)
+        # Branching factor = (Total branches / Total relevant files) + 1
+        # This is a heuristic to approximate the paper's branching metric
+        return round((branch_count / max(1, file_count)) + 1, 2)
     
     def _measure_retrain_frequency(self):
         """Measure how often models are retrained"""

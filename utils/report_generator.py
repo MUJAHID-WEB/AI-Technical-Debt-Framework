@@ -498,15 +498,15 @@ class ReportGenerator:
         ))
         story.append(Spacer(1, 10))
         
-        # Tier descriptions
+        # Tier descriptions (Aligned with Section III-D of CSE459)
         tier_data = [
-            ['Tier', 'Focus Area', 'Key Metrics'],
-            ['1', 'Data Collection', 'Service count, Model count, Language distribution'],
-            ['2', 'System Analysis', 'API endpoints, Dependencies, Frameworks'],
-            ['3', 'AI Smell Detection', 'Direct calls, Glue code, Hidden consumers'],
-            ['4', 'MES Computation', 'Entanglement score, Component contributions'],
-            ['5', 'Maintainability', 'Code churn, Bug rate, Change impact'],
-            ['6', 'Validation', 'Degradation ratio, Statistical significance']
+            ['Tier', 'Focus Area', 'Key Sub-Steps & Metrics'],
+            ['1', 'Data Collection', 'Boundary Detection (Docker/Reqs), Model Scan, Code Extraction'],
+            ['2', 'System Analysis', 'Service Detection (2A), Model Detection (2B), Pipeline Analysis (2C)'],
+            ['3', 'AI Smell Detection', 'Direct Calls (3A), Glue Code (3B), Hidden Consumers (3C), Pipeline (3D)'],
+            ['4', 'MES Computation', 'Weight Allocation (0.25/0.20/0.15/0.20/0.10/0.10)'],
+            ['5', 'Maintainability', 'Code Churn (5A), Change Impact (5B), Bug Frequency (5C)'],
+            ['6', 'Validation', 'MES-Churn Correlation (6A), Degradation Ratio (6B)']
         ]
         
         tier_table = Table(tier_data, colWidths=[50, 100, 250])

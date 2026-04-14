@@ -161,26 +161,28 @@ class ModelEntanglementEngine:
         return factor
     
     def _get_mes_level(self, mes):
-        """Get qualitative level from MES score"""
+        """
+        Get qualitative level from MES score.
+        Strictly aligned with Equation 10 (Page 5)
+        """
         if mes <= 3:
             return 'LOW'
-        elif mes <= 5:
-            return 'MODERATE'
         elif mes <= 7:
-            return 'HIGH'
+            return 'MODERATE'
         else:
             return 'CRITICAL'
     
     def _get_interpretation(self, mes):
-        """Get interpretation text for MES score"""
+        """
+        Get interpretation text for MES score.
+        Strictly aligned with paper terminology.
+        """
         if mes <= 3:
-            return "Low entanglement - Well-isolated architecture with minimal technical debt"
-        elif mes <= 5:
-            return "Moderate entanglement - Some architectural debt, manageable with minor refactoring"
+            return "LOW ENTANGLEMENT: Well-isolated architecture with minimal technical debt."
         elif mes <= 7:
-            return "High entanglement - Significant architectural debt, refactoring recommended"
+            return "MODERATE ENTANGLEMENT: Significant architectural debt. Phased isolation recommended."
         else:
-            return "CRITICAL entanglement - Severe architectural debt, immediate action required"
+            return "CRITICAL ENTANGLEMENT: Severe model-service coupling. Immediate remediation required."
     
     def _identify_risk_factors(self):
         """Identify specific risk factors contributing to MES"""

@@ -15,8 +15,17 @@ class AIArchitect:
     def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.url = os.getenv("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
-        self.model = os.getenv("OPENROUTER_MODEL", "google/gemma-4-26b-a4b-it:free")
+        self.model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash-lite")
         print(f"🏗️ AIArchitect initialized with model: {self.model}")
+
+    def _extract_json(self, content):
+        """Robustly extract JSON from model response, handling markdown code fences."""
+        import re
+        content = content.strip()
+        match = re.search(r'```(?:json)?\s*([\s\S]*?)```', content)
+        if match:
+            content = match.group(1).strip()
+        return json.loads(content)
         
     def propose_architecture(self, results):
         """
@@ -110,7 +119,6 @@ Return a JSON object with this structure:
                 payload = {
                     "model": self.model,
                     "messages": [{"role": "user", "content": prompt}],
-                    "response_format": {"type": "json_object"},
                     "temperature": 0.4
                 }
                 
@@ -136,12 +144,15 @@ Return a JSON object with this structure:
                 content = result['choices'][0]['message']['content']
                 
                 try:
-                    architecture_data = json.loads(content)
+                    architecture_data = self._extract_json(content)
+                    # Extract 'improved_architecture' if nested, otherwise use the data itself
+                    improved_arch = architecture_data.get('improved_architecture', architecture_data)
                     return {
+                        "improved_architecture": improved_arch,
                         "architecture_json": architecture_data,
                         "explanation": architecture_data.get('explanation', "AI-proposed architectural improvements.")
                     }
-                except json.JSONDecodeError:
+                except (json.JSONDecodeError, ValueError):
                     return {
                         "error": "Failed to parse AI response as JSON",
                         "raw_response": content

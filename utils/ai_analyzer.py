@@ -16,8 +16,18 @@ class AIAnalyzer:
     def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.url = os.getenv("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
-        self.model = os.getenv("OPENROUTER_MODEL", "google/gemma-4-26b-a4b-it:free")
+        self.model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash-lite")
         print(f"🤖 AIAnalyzer initialized with model: {self.model}")
+
+    def _extract_json(self, content):
+        """Robustly extract JSON from model response, handling markdown code fences."""
+        import re
+        # Strip ```json ... ``` or ``` ... ``` wrappers
+        content = content.strip()
+        match = re.search(r'```(?:json)?\s*([\s\S]*?)```', content)
+        if match:
+            content = match.group(1).strip()
+        return json.loads(content)
         
     def analyze_structure(self, tier1_data):
         """
@@ -61,8 +71,7 @@ Return JSON with: {{
             
             payload = {
                 "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"}
+                "messages": [{"role": "user", "content": prompt}]
             }
             
             response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=60)
@@ -70,7 +79,7 @@ Return JSON with: {{
             
             result = response.json()
             content = result['choices'][0]['message']['content']
-            return json.loads(content)
+            return self._extract_json(content)
             
         except Exception as e:
             print(f"Structure analysis error: {e}")
@@ -115,8 +124,7 @@ Return JSON: {{
             
             payload = {
                 "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"}
+                "messages": [{"role": "user", "content": prompt}]
             }
             
             response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=60)
@@ -124,7 +132,7 @@ Return JSON: {{
             
             result = response.json()
             content = result['choices'][0]['message']['content']
-            return json.loads(content)
+            return self._extract_json(content)
             
         except Exception as e:
             print(f"Architecture analysis error: {e}")
@@ -168,8 +176,7 @@ Return JSON: {{
             
             payload = {
                 "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"}
+                "messages": [{"role": "user", "content": prompt}]
             }
             
             response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=60)
@@ -177,7 +184,7 @@ Return JSON: {{
             
             result = response.json()
             content = result['choices'][0]['message']['content']
-            return json.loads(content)
+            return self._extract_json(content)
             
         except Exception as e:
             print(f"Smell analysis error: {e}")
@@ -219,8 +226,7 @@ Return JSON: {{
             
             payload = {
                 "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"}
+                "messages": [{"role": "user", "content": prompt}]
             }
             
             response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=60)
@@ -228,7 +234,7 @@ Return JSON: {{
             
             result = response.json()
             content = result['choices'][0]['message']['content']
-            return json.loads(content)
+            return self._extract_json(content)
             
         except Exception as e:
             print(f"Debt forecast error: {e}")
@@ -272,8 +278,7 @@ Return JSON: {{
             
             payload = {
                 "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"}
+                "messages": [{"role": "user", "content": prompt}]
             }
             
             response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=60)
@@ -281,7 +286,7 @@ Return JSON: {{
             
             result = response.json()
             content = result['choices'][0]['message']['content']
-            return json.loads(content)
+            return self._extract_json(content)
             
         except Exception as e:
             print(f"Risk assessment error: {e}")
@@ -364,7 +369,6 @@ Return JSON with structure:
                 payload = {
                     "model": self.model,
                     "messages": [{"role": "user", "content": prompt}],
-                    "response_format": {"type": "json_object"},
                     "temperature": 0.3
                 }
                 
@@ -390,12 +394,12 @@ Return JSON with structure:
                 content = result['choices'][0]['message']['content']
                 
                 try:
-                    report_data = json.loads(content)
+                    report_data = self._extract_json(content)
                     return {
                         "report_json": report_data,
                         "reasoning": result['choices'][0]['message'].get('reasoning_details', {})
                     }
-                except json.JSONDecodeError:
+                except (json.JSONDecodeError, ValueError):
                     return {
                         "error": "Failed to parse AI response as JSON",
                         "raw_response": content
